@@ -1,6 +1,6 @@
-function var_rfit = fit_local_robust_double(paramod,x,y,time,var,botdepth,xo,yo,do,xscaleo,yscaleo,nobsmin,timebin,nbinmin,wmax,timescan,gross_std_scan,text_var)
+function var_rfit = fit_local_robust(paramod,x,y,time,var,botdepth,xo,yo,do,xscaleo,yscaleo,nobsmin,timebin,nbinmin,wmax,timescan,gross_std_scan,text_var)
 %
-% var_rfit = fit_local_robust_double(@paramod,x,y,time,var,botdepth,xo,yo,do,xscaleo,yscaleo,nobsmin,timespan,timemid,timebin,nbinmin,wmax,timescan,gross_std_scan,text_var);
+% var_rfit = fit_local_robust(@paramod,x,y,time,var,botdepth,xo,yo,do,xscaleo,yscaleo,nobsmin,timespan,timemid,timebin,nbinmin,wmax,timescan,gross_std_scan,text_var);
 %
 % Fits the ocean profile data var to the parametric model paramod(x,y,time)
 %
@@ -68,8 +68,6 @@ function var_rfit = fit_local_robust_double(paramod,x,y,time,var,botdepth,xo,yo,
 % PJD  5 Jun 2009   - Renamed to fit_local_robust_double.m (was fit_local_robust.m) and included a second exclusion
 %                     using modelled data fields
 % PJD  5 Jun 2009   - Returned ilevel to 1:nlevels (was set to check just surface)
-% PJD 13 Sep 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/code/_archive/fit_local_robust_double.m (090605)
-%                     and updated input
 
 % Have to think about a smarter way to allocate memory to var_rfit.bad_data - currently set to 100 points, may not be enough, then
 % loop through the 100 points to scrub NaN data..
@@ -109,7 +107,7 @@ junk = paramod(1,1,1970); nparam = length(junk); % Check paramod output size
 var_rfit.bad_data = deal(NaN(100,4)); bad_data_count = 1; % Create variable to catch dodge data, set at 100 per level (has been 20, 50) might need to be larger
 ibad = [];
 
-for ilevel = 1:nlevels
+for ilevel = 1:nlevels;
     xscale = xscaleo; yscale = yscaleo; % reset lon and lat scale factors
     zz = var(ilevel,:);
     % Check size of array, and transpose if necessary convert to column, so rownum > colnum
@@ -123,11 +121,11 @@ for ilevel = 1:nlevels
     % Correlate data following topo using weighting functions for each 30 year periods (15 year window each side) and keep time coverage
     wbin = 0.*timebin;
 
-    for itimebin = 1:length(timebin)
+    for itimebin = 1:length(timebin);
         iibin = abs(time(:)-timebin(itimebin)) <= timescan & ~isnan(zz(:)) ; % Susan - reduced to 7.5 (temp) so 15 year window instead of 15 (30 year window) - now timescan variable
         ww = wght(iibin);
         wsort = sort(-ww);
-        if length(ww) < nbinmin
+        if length(ww) < nbinmin,
             wbin(itimebin) = 0.;
         else
             wbin(itimebin) = min([-wsort(nbinmin),wmax]); % keep some spatial grab around moorings using wmax
@@ -140,10 +138,10 @@ for ilevel = 1:nlevels
         ig = find(wght(:) >= wkeep & ~isnan(zz(:))); % keep closest nobsmin points
         
         % do we have to search further out to get Nobmin
-        if length(ig) < nobsmin
+        if length(ig) < nobsmin;
             [wsort,isort] = sort(-wght);
             numgood = cumsum( ~isnan(zz(isort)));
-            ikeeptotal = find(numgood >= nobsmin, 1);
+            ikeeptotal = min( find(numgood >= nobsmin) );
             wkeep = min( [wkeep,-wsort(ikeeptotal)] );
         end % if length(ig)..
     else
@@ -176,7 +174,7 @@ for ilevel = 1:nlevels
             end % if ~isnan
         end % if ~isempty
         
-        if ~isempty(ig)
+        if ~isempty(ig),
             ig = ig(:);
             
             if ~noplot && rem(ilevel,nplotz) == 0
@@ -200,7 +198,7 @@ for ilevel = 1:nlevels
                 xn = (xx(:)-xo)/xscale; yn = (yy(:)- yo)/yscale;
                 ind = ig;
                 % check if seasonal coverage is complete
-                pdf = histcounts(rem(tt,1),[0:0.2:0.8,1.01]); pdf(length(pdf)) = [];
+                pdf = histc(rem(tt,1),[0:0.2:0.8,1.01]); pdf(length(pdf)) = [];
                 
                 if sum(pdf > 10) >= 3
                     % do not proceed with fit if two seasons do not have some data

@@ -12,14 +12,17 @@
 %
 % USAGE: z = etopo2v2(lats,lons)
 
-% Notes:
-% PJD 13 Sep 2020   - Copied from /work/durack1/csiro/eez_data/software/matlab/etopo2v2.m (080922)
-
 function z = etopo2v2(lats,lons)
 
-fname = '/work/durack1/csiro/netcdf-data/ETOPO2v2c_f4_cmar.nc';
+if exist('platform_path','file')
+   fname = platform_path('bluelink','netcdf-data/ETOPO2v2c_f4_cmar.nc');
+else
+   addpath /home/eez_data/software/matlab/
+   fname = platform_path('bluelink','netcdf-data/ETOPO2v2c_f4_cmar.nc');
+   rmpath /home/eez_data/software/matlab/
+end
 
-z = NaN(size(lats));
+z = repmat(NaN,size(lats));
 lons = lons(:);
 lats = lats(:);
 

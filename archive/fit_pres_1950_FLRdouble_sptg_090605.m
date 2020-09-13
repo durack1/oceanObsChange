@@ -4,7 +4,6 @@
 % Nicked from /home/wijffels/work/argo/seasonal_fit/fit_all_sigma_global.m
 
 % Paul J. Durack 15 Mar 2007
-%{
 % PJD 4 June 2007   - Remove sector limitation, increase sig to complete 82 levels
 % PJD 5 June 2007   - Remove loop which reloads input data, removed due to total data loaded
 %                     into memory, no more scans through sector size
@@ -126,16 +125,12 @@
 %                     (was fit_pres_1950_5sdexclude_sptg.m)
 % PJD  5 Jun 2009   - Updated hostnames to include new boxes (674-hf, 675-hf, 573-hf)
 % PJD  5 Jun 2009   - Removed nobs loop (been using 1000 for some time now!)
-%}
-% PJD 13 Sep 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/code/_archive/fit_pres_1950_FLRdouble_sptg.m (090605)
-%                     and updated input
 
 warning off all % Suppress warning messages
 tic % Start timing script
-addpath('/export/durack1/git/oceanObs')
 
 %% Set multi-thread conditions
-[~, mat_version, mat_patch_version] = matlab_mode; clear command mat_patch*
+[command, mat_version, mat_patch_version] = matlab_mode; clear command mat_patch*
 a_multithread_num = 2; % Set number of target threads
 maxNumCompThreads(a_multithread_num); % Enable multi-threading V7.5+
 
@@ -146,15 +141,14 @@ maxNumCompThreads(a_multithread_num); % Enable multi-threading V7.5+
 trim_host = strtrim(hostname);
 a_host_longname = getenv('HOSTNAME');
 % Specify file author name
-a_author = 'pauldurack@llnl.gov; +1 925 422 5208; Lawrence Livermore National Laboratory, Livermore, California, USA';
+a_author = 'paul.durack@csiro.au; (03) 6232 5283; CSIRO CMAR Hobart';
 % Obtain this scriptname and time initialised
-script_name = 'fit_pres_1950_FLRdouble_sptg_200913';
-home_dir = '/export/durack1/git/oceanObs/';
-arch_dir = '/work/durack1/Shared/090605_FLR2_sptg/';
-grab_dir = '/work/durack1/Shared/';
-a_script_name = [home_dir,'/',script_name,'.m']; % Needs to be explicitly written
+script_name = 'fit_pres_1950_FLRdouble_sptg';
+home_dir = '/home/dur041/Shared/';
+a_script_name = [home_dir,'code/',script_name,'.m']; % Needs to be explicitly written
 a_script_start_time = [datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)];
 a_matlab_version = mat_version;
+
 
 %% As this version is running within an interactive console, grab output to a log file
 % - Catch and clear memory if script fails
@@ -162,21 +156,21 @@ a_matlab_version = mat_version;
 
 % Create dynamic time component to outfilename, so that file overwrites don't occur
 outfilenow = regexprep([datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)],':','');
-id_str = ['1950_FLRdouble_sptg_200913','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
+id_str = ['1950_FLRdouble_sptg','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
 
 if ( strcmpi('larry',trim_host) || strcmpi('tracy',trim_host) || strcmpi('ingrid',trim_host) )
     logfile = ['/',trim_host,'1/dur041/',outfilenow,'_',script_name,'.log'];
 elseif ( strcmpi('c000573-hf',trim_host) || strcmpi('c000574-hf',trim_host) || strcmpi('c000674-hf',trim_host) || strcmpi('c000675-hf',trim_host) )
     logfile = ['/work/dur041/',outfilenow,'_',script_name,'.log'];
-elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || strcmpi('crunchy',trim_host) || strcmpi('gates',trim_host) )
-    logfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis',outfilenow,'_',script_name,'.log'];
 else
     logfile = [home_dir,outfilenow,'_',script_name,'.log'];
 end
 clear script_name
 eval(['diary ',logfile])
 
-load([grab_dir,'pressure_levels.mat'], 'pressure_levels'); % Load index of pressure levels
+addpath /home/eez_data/software/matlab
+addpath /home/toolbox/local/csirolib
+load([home_dir,'pressure_levels.mat'], 'pressure_levels'); % Load index of pressure levels
 
 %% Prepare analysis grid and search criteria
 nobs = 1000;
@@ -195,6 +189,7 @@ xscaleo = 2.0; yscaleo = 1.0; wmax = 0.2; nbinmin = 10;
 timespan = 50.0; timemid = 1975; timebin = 1950:10:2010; timescan = 10;
 gross_std_scan = 5; lat_scan = 10; lon_scan = 25;
 
+
 %% Create parametric model of varying complexity
 % set the parametric local model:
 p_space = @(x,y,time) [ones(length(x),1),x(:),x(:).^2,y(:),y(:).^2,x(:).*y(:) ]; % Quadratic in x and y
@@ -211,7 +206,7 @@ p_sinu2y = @(x,y,time) [y(:).*cos(2*pi*time(:)),y(:).*sin(2*pi*time(:)),y(:).*co
 p_ccxy = @(x,y,time) [x(:).*(time-timemid)/timespan,y(:).*(time-timemid)/timespan];
 
 % Options to include an SOI following parameter
-[ti_soi,f_soi] = get_climind('soi',18);
+[ti_soi,f_soi] = get_soi(18);
 ik = find(ti_soi >= timebin(1));
 ti_soi = ti_soi(ik);
 fd_soi = detrend(normal(f_soi(ik))); clear f_soi ik
@@ -220,7 +215,7 @@ p_soi = @(time) (interp1(ti_soi(:),fd_soi(:),time)); clear ti_soi fd_soi
 
 %% Build parametric model from components above
 iscc = 1; % Use simplified non-cc model if 0, otherwise use cc linear and in x, y space
-if iscc % Climate change the focus?
+if iscc
     %pmodel = @(x,y,time) [p_space(x,y,time),p_sinu2(x,y,time),p_cc(x,y,time)];
     paramodel = @(x,y,time) [p_space(x,y,time),p_sinu2(x,y,time),p_sinu2x(x,y,time),p_sinu2y(x,y,time),p_cc(x,y,time),p_ccxy(x,y,time),p_soi(time)];
     paramodel_length = length(paramodel(1,1,1));
@@ -240,11 +235,11 @@ bad_data = deal( NaN(4000000,4) ); bad_data_count = 1;
 di = NaN(length(xi),length(yi));
 
 %% Load latest input data into memory
-load([arch_dir,'090408_pressurf_global_nodupes_exclude.mat'],'gamrf','s','pt','src','time_decimal','x','y','basin_nums'); % Trim down to components required only
+load([home_dir,'090408_pressurf_global_nodupes_exclude.mat'],'gamrf','s','pt','src','time_decimal','x','y','basin_nums'); % Trim down to components required only
 botdepth = -1*etopo2v2(y,x); % Replaced from topongdc
 
 %% Loop through lons
-for ix = 1:length(xi) % for length(lon)
+for ix = 1:length(xi); % for length(lon)
     di(ix,:) = -1*etopo2v2(yi,xi(ix)*ones(size(yi))); % Get depth index - Don't solve if over land
     % Fix dateline 0:360 discontinuity - shift by 180 degrees
     if ( xi(ix) < 20 || xi(ix) > 340 )
@@ -257,13 +252,13 @@ for ix = 1:length(xi) % for length(lon)
     
     %% Search for and determine which data is included for grabbing
     % Load ocean basin mask on 2x1 degree grid
-    load([grab_dir,'code/make_basins.mat'], 'basins3_NaN_2x1', 'grid_lats', 'grid_lons');
+    load([home_dir,'code/make_basins.mat'], 'basins3_NaN_2x1', 'grid_lats', 'grid_lons');
     basins3 = basins3_NaN_2x1'; clear basins3_NaN_2x1; % Removed transpose from basins3
     
-    for iy = find( di(ix,:) > 20 & ~isnan(basins3(ix,:)) ) % for lats; Depths > 20 and valid mask values looping through lons (ix)..
+    for iy = find( di(ix,:) > 20 & ~isnan(basins3(ix,:)) ); % for lats; Depths > 20 and valid mask values looping through lons (ix)..
         % Determine target point basin_num
-        londist = abs(grid_lons - xi(ix)); [~,ilon] = min(londist);
-        latdist = abs(grid_lats - yi(iy)); [~,ilat] = min(latdist);
+        londist = abs(grid_lons - xi(ix)); [mi,ilon] = min(londist); clear mi
+        latdist = abs(grid_lats - yi(iy)); [mi,ilat] = min(latdist); clear mi
         target_basin_num = basins3(ilon,ilat); clear ilon ilat % Basin #'s or NaN value
         disp(['lon: ',num2str(xi(ix)),' lat: ',num2str(yi(iy)),' basin_num: ',num2str(target_basin_num)])
         % Check for valid point, and check for mixing beneath southern extent of continent
@@ -295,7 +290,7 @@ for ix = 1:length(xi) % for length(lon)
         % Now check to see that a minimum of nobs = 1000 data points and enough temporal data are being passed to the fitter function
         lat_scan_grow = lat_scan; lon_scan_grow = lon_scan;
         
-        time_cover = histogram(time_decimal(ii),timebin); % Determine data points in each decadal bin
+        time_cover = hist(time_decimal(ii),timebin); % Determine data points in each decadal bin
         while length(ii) < nobs || min(time_cover) < nbinmin
             lat_scan_grow = lat_scan_grow*1.25;
             lon_scan_grow = lon_scan_grow*1.25;
@@ -306,7 +301,7 @@ for ix = 1:length(xi) % for length(lon)
                 break % Break out of while loop
             end
             ii = find( ~isnan(basin_nums_points) & abs(y - yi(iy)) < lat_scan & abs(xx - xfit) < lon_scan & time_decimal >= timebin(1) );
-            time_cover = histogram(time_decimal(ii),timebin);
+            time_cover = hist(time_decimal(ii),timebin);
         end
         
         %% Solve using fitter and append results into structured array
@@ -389,13 +384,11 @@ for ix = 1:length(xi) % for length(lon)
     %% End Solver
     
     %% Save to output *.mat files - using dynamic filename - $outfilenow
-    if rem(ix,floor(length(xi)/40)) == 0 % For 360 lons, save each 360/5 = 72 lons complete; 10 = 36 complete; 40 = 8 complete
+    if rem(ix,floor(length(xi)/40)) == 0, % For 360 lons, save each 360/5 = 72 lons complete; 10 = 36 complete; 40 = 8 complete
         if ( strcmpi('larry',trim_host) || strcmpi('tracy',trim_host) || strcmpi('ingrid',trim_host) )
             outfile = ['/',trim_host,'1/dur041/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
         elseif ( strcmpi('c000573-hf',trim_host) || strcmpi('c000574-hf',trim_host) || strcmpi('c000674-hf',trim_host) || strcmpi('c000675-hf',trim_host) )
             outfile = ['/work/dur041/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
-        elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || strcmpi('crunchy',trim_host) || strcmpi('gates',trim_host) )
-            logfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
         else
             outfile = ['/home/dur041/Shared/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
         end
@@ -417,8 +410,6 @@ if ( strcmpi('larry',trim_host) || strcmpi('tracy',trim_host) || strcmpi('ingrid
     outfile = ['/',trim_host,'1/dur041/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
 elseif ( strcmpi('c000573-hf',trim_host) || strcmpi('c000574-hf',trim_host) || strcmpi('c000674-hf',trim_host) || strcmpi('c000675-hf',trim_host) )
     outfile = ['/work/dur041/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
-elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || strcmpi('crunchy',trim_host) || strcmpi('gates',trim_host) )
-    logfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
 else
     outfile = ['/home/dur041/Shared/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
 end
@@ -431,6 +422,7 @@ save(outfile, 'a_host_longname', 'a_author', 'a_script_name', 'a_script_start_ti
 disp(['File: ',outfile,' complete - nobs loop']);
 
 pack % Attempt to reduce memory usage
+
 
 %% End write output files
 

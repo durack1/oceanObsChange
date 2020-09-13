@@ -34,17 +34,15 @@ function [time_ind,ind] = get_climind(clim_ind,nmonths,start_year)
 % PJD 27 Apr 2011   - Updated slight issue with case recognition, case is now ignored for input clim_ind argument
 % PJD 17 May 2011   - Updated path of data files
 % PJD  9 Jun 2011   - Updated: SOI, SAM, PDO, AMO, Solar & Solar adjusted
-% PJD 13 Sep 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/code/get_climind.m (110609)
-% PJD 13 Sep 2020   - Updated SOI
-% PJD 13 Sep 2020   - TODO: incorporate volc forcing data (NOAA - Ammann)
-% PJD 13 Sep 2020   - TODO: incorporate volc forcing data (GISS - Sato)
-% PJD 13 Sep 2020   - TODO: incorporate NCEP/ERA40 SAM etc - see /home/mui044/PCCSP/ncep_sam_index_20100713.mat
-% PJD 13 Sep 2020   - TODO: Add IPO (Interdecadal Pacific Oscillation), NAM/AO, MJO
+% PJD  9 Jun 2011   - TODO: incorporate volc forcing data (NOAA - Ammann)
+% PJD  9 Jun 2011   - TODO: incorporate volc forcing data (GISS - Sato)
+% PJD  9 Jun 2011   - TODO: incorporate NCEP/ERA40 SAM etc - see /home/mui044/PCCSP/ncep_sam_index_20100713.mat
+% PJD  9 Jun 2011   - TODO: Add IPO (Interdecadal Pacific Oscillation), NAM/AO, MJO
 
 % Specify variables, start years and input files
 clim_indexes =  {'soi','n34','pdo','sam','nao','amo','sol','vol'};
 clim_startyrs = [1866, 1871, 1900, 1957, 1865, 1856, 1947, 1890];
-clim_files = {'SOI_1866-2016_Trenberth', ...
+clim_files = {'SOI_1866-2011_Trenberth', ...
               'Nino3.4_1871-2007_smoothed', ...
               'PDO_1900-2011_Mantua', ...
               'SAM_1957-2011_Marshall', ...
@@ -101,8 +99,7 @@ end
 if nargin >= 4, disp('** GET_CLIMIND.m: invalid input arguments, exiting **'), return; end
 
 %fid  = fopen(['/home/dur041/Shared/code/',ind_file,'.dat'],'r'); % dur041 - to debug 100215
-%fid = fopen([regexprep(mfilename('fullpath'),'get_climind',strcat(['clim_data/',char(ind_file)])),'.dat'],'r');
-fid = fopen(['/work/durack1/Shared/code/',strcat(['clim_data/',char(ind_file)]),'.dat'],'r');
+fid = fopen([regexprep(mfilename('fullpath'),'get_climind',strcat(['clim_data/',char(ind_file)])),'.dat'],'r');
 for isheader = 1:4
     fgetl(fid); % Read through header lines
 end

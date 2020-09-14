@@ -12,6 +12,7 @@ function [time_ind,ind] = get_climind(clim_ind,nmonths,start_year)
 %          ind                      - climate index (filtered if specified)
 %  Indices:
 %  SOI (NCAR CDC, Trenberth, 1984 MWR) - http://www.cgd.ucar.edu/cas/catalog/climind/SOI.signal.ascii
+%  also see https://www.cpc.ncep.noaa.gov/data/indices/soi
 %  Nino3.4 (NCAR CDC, 5-month smoothed) - http://www.cgd.ucar.edu/cas/catalog/climind/TNI_N34/index.html#Sec5
 %  PDO (Mantua et al., 1997 BAMS) - http://jisao.washington.edu/pdo/PDO.latest
 %  SAM (Marshall, 2003 JCL) - http://www.antarctica.ac.uk/met/gjma/sam.html
@@ -36,10 +37,11 @@ function [time_ind,ind] = get_climind(clim_ind,nmonths,start_year)
 % PJD  9 Jun 2011   - Updated: SOI, SAM, PDO, AMO, Solar & Solar adjusted
 % PJD 13 Sep 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/code/get_climind.m (110609)
 % PJD 13 Sep 2020   - Updated SOI
-% PJD 13 Sep 2020   - TODO: incorporate volc forcing data (NOAA - Ammann)
-% PJD 13 Sep 2020   - TODO: incorporate volc forcing data (GISS - Sato)
-% PJD 13 Sep 2020   - TODO: incorporate NCEP/ERA40 SAM etc - see /home/mui044/PCCSP/ncep_sam_index_20100713.mat
-% PJD 13 Sep 2020   - TODO: Add IPO (Interdecadal Pacific Oscillation), NAM/AO, MJO
+% PJD 14 Sep 2020   - Should consider updated SOI index - see NCEP link above
+%                   - TODO: incorporate volc forcing data (NOAA - Ammann)
+%                   - TODO: incorporate volc forcing data (GISS - Sato)
+%                   - TODO: incorporate NCEP/ERA40 SAM etc - see /home/mui044/PCCSP/ncep_sam_index_20100713.mat
+%                   - TODO: Add IPO (Interdecadal Pacific Oscillation), NAM/AO, MJO
 
 % Specify variables, start years and input files
 clim_indexes =  {'soi','n34','pdo','sam','nao','amo','sol','vol'};

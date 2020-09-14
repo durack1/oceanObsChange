@@ -295,7 +295,7 @@ for ix = 1:length(xi) % for length(lon)
         % Now check to see that a minimum of nobs = 1000 data points and enough temporal data are being passed to the fitter function
         lat_scan_grow = lat_scan; lon_scan_grow = lon_scan;
         
-        time_cover = histogram(time_decimal(ii),timebin); % Determine data points in each decadal bin
+        time_cover = hist(time_decimal(ii),timebin); % Determine data points in each decadal bin
         while length(ii) < nobs || min(time_cover) < nbinmin
             lat_scan_grow = lat_scan_grow*1.25;
             lon_scan_grow = lon_scan_grow*1.25;
@@ -306,7 +306,7 @@ for ix = 1:length(xi) % for length(lon)
                 break % Break out of while loop
             end
             ii = find( ~isnan(basin_nums_points) & abs(y - yi(iy)) < lat_scan & abs(xx - xfit) < lon_scan & time_decimal >= timebin(1) );
-            time_cover = histogram(time_decimal(ii),timebin);
+            time_cover = hist(time_decimal(ii),timebin);
         end
         
         %% Solve using fitter and append results into structured array

@@ -189,6 +189,7 @@ isig = 1:length(pressure_levels);
 str_lvls = length(isig); % Get length of levels to name output files
 
 % Parameters below set how fitting occurs
+
 %% Experiment with scale factors (window over which fitting occurs - spatial, time and gross data sampling/exclusion)
 %[Y, M, D, H, MN, S] = datevec(now); yearnow = Y;
 xscaleo = 2.0; yscaleo = 1.0; wmax = 0.2; nbinmin = 10;
@@ -395,7 +396,7 @@ for ix = 1:length(xi) % for length(lon)
         elseif ( strcmpi('c000573-hf',trim_host) || strcmpi('c000574-hf',trim_host) || strcmpi('c000674-hf',trim_host) || strcmpi('c000675-hf',trim_host) )
             outfile = ['/work/dur041/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
         elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || strcmpi('crunchy',trim_host) || strcmpi('gates',trim_host) )
-            logfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
+            outfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
         else
             outfile = ['/home/dur041/Shared/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
         end
@@ -418,7 +419,7 @@ if ( strcmpi('larry',trim_host) || strcmpi('tracy',trim_host) || strcmpi('ingrid
 elseif ( strcmpi('c000573-hf',trim_host) || strcmpi('c000574-hf',trim_host) || strcmpi('c000674-hf',trim_host) || strcmpi('c000675-hf',trim_host) )
     outfile = ['/work/dur041/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
 elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || strcmpi('crunchy',trim_host) || strcmpi('gates',trim_host) )
-    logfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
+    outfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
 else
     outfile = ['/home/dur041/Shared/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
 end

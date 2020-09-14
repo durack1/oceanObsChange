@@ -255,12 +255,12 @@ for ix = 1:length(xi) % for length(lon)
         xfit = xi(ix);
         xx = x;
     end
-    
+
     %% Search for and determine which data is included for grabbing
     % Load ocean basin mask on 2x1 degree grid
     load([grab_dir,'code/make_basins.mat'], 'basins3_NaN_2x1', 'grid_lats', 'grid_lons');
     basins3 = basins3_NaN_2x1'; clear basins3_NaN_2x1; % Removed transpose from basins3
-    
+
     for iy = find( di(ix,:) > 20 & ~isnan(basins3(ix,:)) ) % for lats; Depths > 20 and valid mask values looping through lons (ix)..
         % Determine target point basin_num
         londist = abs(grid_lons - xi(ix)); [~,ilon] = min(londist);
@@ -289,13 +289,13 @@ for ix = 1:length(xi) % for length(lon)
                 end
             end
         end
-        
+
         % Now use basin index to get nearby data points - These are now set at lat_scan, lon_scan and timebin(1) variables 071031:
         ii = find( ~isnan(basin_nums_points) & abs(y - yi(iy)) < lat_scan & abs(xx - xfit) < lon_scan & time_decimal >= timebin(1) ); % Index lats < lat_scan, lons < lon_scan, time_decimal > timebin(1) off target
-        
+
         % Now check to see that a minimum of nobs = 1000 data points and enough temporal data are being passed to the fitter function
         lat_scan_grow = lat_scan; lon_scan_grow = lon_scan;
-        
+
         time_cover = hist(time_decimal(ii),timebin); % Determine data points in each decadal bin
         while length(ii) < nobs || min(time_cover) < nbinmin
             lat_scan_grow = lat_scan_grow*1.25;
@@ -309,12 +309,12 @@ for ix = 1:length(xi) % for length(lon)
             ii = find( ~isnan(basin_nums_points) & abs(y - yi(iy)) < lat_scan & abs(xx - xfit) < lon_scan & time_decimal >= timebin(1) );
             time_cover = hist(time_decimal(ii),timebin);
         end
-        
+
         %% Solve using fitter and append results into structured array
-        
+
         % Solve for salinity
         var_rfit = fit_local_robust_double(paramodel,xx(ii),y(ii),time_decimal(ii),s(isig,ii),botdepth(ii),xfit,yi(iy),di(ix,iy),xscaleo,yscaleo,nobs,timebin,nbinmin,wmax,timescan,gross_std_scan,'salt ');
-        
+
         if ~all(isnan(var_rfit.mean))
             sn(ix,iy,:) = var_rfit.n;
             sres(ix,iy,:) = var_rfit.stdres;
@@ -337,10 +337,10 @@ for ix = 1:length(xi) % for length(lon)
                 bad_data_count = bad_data_count + 1;
             end
         end % if ~all..
-        
+
         % Solve for potential temperature
         var_rfit = fit_local_robust_double(paramodel,xx(ii),y(ii),time_decimal(ii),pt(isig,ii),botdepth(ii),xfit,yi(iy),di(ix,iy),xscaleo,yscaleo,nobs,timebin,nbinmin,wmax,timescan,gross_std_scan,'temp ');
-        
+
         if ~all(isnan(var_rfit.mean))
             ptn(ix,iy,:) = var_rfit.n;
             ptres(ix,iy,:) = var_rfit.stdres;
@@ -361,10 +361,10 @@ for ix = 1:length(xi) % for length(lon)
                 bad_data_count = bad_data_count + 1;
             end
         end % if ~all..
-        
+
         % Solve for density
         var_rfit = fit_local_robust_double(paramodel,xx(ii),y(ii),time_decimal(ii),gamrf(isig,ii),botdepth(ii),xfit,yi(iy),di(ix,iy),xscaleo,yscaleo,nobs,timebin,nbinmin,wmax,timescan,gross_std_scan,'gamrf');
-        
+
         if ~all(isnan(var_rfit.mean))
             gamrfn(ix,iy,:) = var_rfit.n;
             gamrfres(ix,iy,:) = var_rfit.stdres;
@@ -385,10 +385,10 @@ for ix = 1:length(xi) % for length(lon)
                 bad_data_count = bad_data_count + 1;
             end
         end % if ~all..
-        
+
     end % For iy
     %% End Solver
-    
+
     %% Save to output *.mat files - using dynamic filename - $outfilenow
     if rem(ix,floor(length(xi)/40)) == 0 % For 360 lons, save each 360/5 = 72 lons complete; 10 = 36 complete; 40 = 8 complete
         if ( strcmpi('larry',trim_host) || strcmpi('tracy',trim_host) || strcmpi('ingrid',trim_host) )
@@ -396,7 +396,7 @@ for ix = 1:length(xi) % for length(lon)
         elseif ( strcmpi('c000573-hf',trim_host) || strcmpi('c000574-hf',trim_host) || strcmpi('c000674-hf',trim_host) || strcmpi('c000675-hf',trim_host) )
             outfile = ['/work/dur041/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
         elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || strcmpi('crunchy',trim_host) || strcmpi('gates',trim_host) )
-            outfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
+            outfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
         else
             outfile = ['/home/dur041/Shared/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
         end
@@ -419,7 +419,7 @@ if ( strcmpi('larry',trim_host) || strcmpi('tracy',trim_host) || strcmpi('ingrid
 elseif ( strcmpi('c000573-hf',trim_host) || strcmpi('c000574-hf',trim_host) || strcmpi('c000674-hf',trim_host) || strcmpi('c000675-hf',trim_host) )
     outfile = ['/work/dur041/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
 elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || strcmpi('crunchy',trim_host) || strcmpi('gates',trim_host) )
-    outfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
+    outfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
 else
     outfile = ['/home/dur041/Shared/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
 end

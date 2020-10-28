@@ -1,3 +1,10 @@
+Wed 28 Oct 2020 12:51:59 PM PDT
+
+Updated for git repo info; Matlab R2020b update 1
+
+(base) bash-4.2$ ~/apps/MATLAB/R2020b/bin/matlab -nosplash -nodesktop -r "run('/export/durack1/git/oceanObs/fit_pres_1950_FLRdouble_sptg.m'); exit;" < /dev/null > /work/durack1/Shared/200428_data_OceanObsAnalysis/201028_1255_matlab9p9.log
+
+
 Sun 13 Sep 2020 04:13:39 PM PDT
 
 All scripts copied from deep archive files required include:

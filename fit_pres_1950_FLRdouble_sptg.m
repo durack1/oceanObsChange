@@ -129,6 +129,7 @@
 %}
 % PJD 13 Sep 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/code/_archive/fit_pres_1950_FLRdouble_sptg.m (090605)
 %                     and updated input
+% PJD 28 Oct 2020   - Updated to include git repo information
 
 warning off all % Suppress warning messages
 tic % Start timing script
@@ -155,6 +156,13 @@ grab_dir = '/work/durack1/Shared/';
 a_script_name = [home_dir,'/',script_name,'.m']; % Needs to be explicitly written
 a_script_start_time = [datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)];
 a_matlab_version = mat_version;
+% Find repo version
+a = getGitInfo;
+a_gitHash = a.hash;
+a_gitBranch = a.branch;
+a_gitRemote = a.remote;
+a_gitUrl = a.url;
+clear a
 
 %% As this version is running within an interactive console, grab output to a log file
 % - Catch and clear memory if script fails
@@ -162,7 +170,7 @@ a_matlab_version = mat_version;
 
 % Create dynamic time component to outfilename, so that file overwrites don't occur
 outfilenow = regexprep([datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)],':','');
-id_str = ['1950_FLRdouble_sptg_200913','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
+id_str = ['1950_FLRdouble_sptg_R2020b','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
 
 if ( strcmpi('larry',trim_host) || strcmpi('tracy',trim_host) || strcmpi('ingrid',trim_host) )
     logfile = ['/',trim_host,'1/dur041/',outfilenow,'_',script_name,'.log'];
@@ -405,6 +413,7 @@ for ix = 1:length(xi) % for length(lon)
         save(outfile, 'ptn', 'ptres', 'ptres2', 'ptc', 'ptce', 'ptcpvals', 'ptxscale', 'ptyscale', 'ptmedtime', 'ptxdatscale', 'ptydatscale', 'ptmean', 'ptstd', '-append');
         save(outfile, 'pressure_levels', 'nobs', 'xscaleo', 'yscaleo', 'timespan', 'xi', 'yi', 'di','paramodel', 'iscc', 'wmax', 'timescan', '-append')
         save(outfile, 'a_host_longname', 'a_author', 'a_script_name', 'a_script_start_time', 'bad_data', 'gross_std_scan', '-append');
+        save(outfile, 'a_gitHash', 'a_gitBranch', 'a_gitRemote', 'a_gitUrl', '-append');
         disp(['File: ',outfile,' complete - ix loop']);
     end % rem(ix...
     pack % Attempt to reduce memory usage
@@ -429,6 +438,7 @@ save(outfile, 'ptn', 'ptres', 'ptres2', 'ptc', 'ptce', 'ptcpvals', 'ptxscale', '
 save(outfile, 'pressure_levels', 'nobs', 'xscaleo', 'yscaleo', 'timespan', 'xi', 'yi', 'di','paramodel', 'iscc', 'wmax', 'timescan', '-append')
 process_time = toc; a_file_process_time = process_time/3600; % Record time taken to process this file in hour units
 save(outfile, 'a_host_longname', 'a_author', 'a_script_name', 'a_script_start_time', 'bad_data', 'gross_std_scan', 'a_matlab_version', 'a_multithread_num', 'a_file_process_time', '-append');
+save(outfile, 'a_gitHash', 'a_gitBranch', 'a_gitRemote', 'a_gitUrl', '-append');
 disp(['File: ',outfile,' complete - nobs loop']);
 
 pack % Attempt to reduce memory usage

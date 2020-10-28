@@ -1,6 +1,9 @@
 # Specific repo dirs/files
 hold
 
+# Matlab
+*.asv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

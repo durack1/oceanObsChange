@@ -1,6 +1,7 @@
 % Create basin and global profile plots mean field overlay
 % Paul J. Durack 1 August 2007
 
+%{
 % PJD 8 Aug 2007    - Edited to overplot gouretski and WOA05 sigma climatologies
 % PJD 9 Aug 2007    - Edited for new input data
 % PJD 10 Aug 2007   - Edited for cc_time^2 and cc_time^3 fields
@@ -74,6 +75,9 @@
 % PJD  1 Jul 2009   - Updated input filename to include *_v7*
 % PJD  1 Jul 2009   - Updated output dir logic (error subdir was not being created)
 % PJD 27 Nov 2009   - Updated to export error estimates for plotting signal significance
+%}
+% PJD 15 Sep 2020   - Copied from /work/durack1/Shared/090605_FLR2_sptg/make_basin_profiles.m (120324)
+%                     and updated input
 
 a_multithread_num = 2; % Set number of target threads
 maxNumCompThreads(a_multithread_num); % Enable multi-threading V7.5+
@@ -86,6 +90,9 @@ if isunix
 elseif strcmp(computer,'PCWIN64')
     home_dir = 'E:\Research\d14qq1s-hf\Shared\'; % Set home directory
     [status,a_host_longname] = dos('hostname');
+elseif strcmp
+    home_dir = 'C:\Sync\Shared\'; % Set home directory
+    [status,a_host_longname] = dos('hostname');
 else
     home_dir = 'C:\Sync\Shared\'; % Set home directory
     [status,a_host_longname] = dos('hostname');
@@ -96,9 +103,9 @@ infile = '090605_190300_local_robust_1950_FLRdouble_sptg_79pres1000_v7';
 full_path = [home_dir,sht_path]; % Set full path
 outfile_dir = 'basin_profiles/'; % Set outfile subdir
 outfile_path = [full_path,outfile_dir]; % Set full outfile path
-if ~isdir(outfile_path) % Check outfile_path exists
+if ~isfolder(outfile_path) % Check outfile_path exists
     mkdir(full_path,outfile_dir)
-elseif ~isdir([outfile_path,'errors/'])
+elseif ~isfolder([outfile_path,'errors/'])
         mkdir([full_path,outfile_dir,'errors/'])
 else % Purge current *.png files
     if strcmp(computer,'PCWIN') || strcmp(computer,'PCWIN64')

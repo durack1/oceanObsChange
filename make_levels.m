@@ -1,6 +1,7 @@
 % Create level plots with EP or mean field overlay
 % Paul J. Durack 1 August 2007
 
+%{
 % PJD  8 Aug 2007   - Edited to overplot gouretski and WOA05 sigma climatologies
 % PJD  9 Aug 2007   - Edited for new input data
 % PJD 10 Aug 2007   - Edited for cc_time^2 and cc_time^3 fields
@@ -118,6 +119,9 @@
 % PJD 11 Jun 2009   - Added a check for density data to writeout plot outputs, there is also a need to
 %                     recreate the surfaceDs fields for the gamrf files
 % PJD 15 Jun 2009   - Added paperplots variable
+%}
+% PJD 15 Sep 2020   - Copied from /work/durack1/Shared/090605_FLR2_sptg/make_levels.m (120324)
+%                     and updated input
 
 a_multithread_num = 2; % Set number of target threads
 maxNumCompThreads(a_multithread_num); % Enable multi-threading V7.5+

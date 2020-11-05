@@ -130,6 +130,7 @@
 % PJD 13 Sep 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/code/_archive/fit_pres_1950_FLRdouble_sptg.m (090605)
 %                     and updated input
 % PJD 28 Oct 2020   - Updated to include git repo information
+% PJD  5 Nov 2020   - Run on crunchy to benchmark
 
 warning off all % Suppress warning messages
 tic % Start timing script
@@ -170,7 +171,7 @@ clear a
 
 % Create dynamic time component to outfilename, so that file overwrites don't occur
 outfilenow = regexprep([datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)],':','');
-id_str = ['1950_FLRdouble_sptg_R2020b','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
+id_str = ['1950_FLRdouble_sptg_crunchy','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
 
 if ( strcmpi('larry',trim_host) || strcmpi('tracy',trim_host) || strcmpi('ingrid',trim_host) )
     logfile = ['/',trim_host,'1/dur041/',outfilenow,'_',script_name,'.log'];

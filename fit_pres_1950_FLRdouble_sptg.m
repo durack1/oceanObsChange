@@ -179,7 +179,7 @@ if ( strcmpi('larry',trim_host) || strcmpi('tracy',trim_host) || strcmpi('ingrid
     logfile = ['/',trim_host,'1/dur041/',outfilenow,'_',script_name,'.log'];
 elseif ( strcmpi('c000573-hf',trim_host) || strcmpi('c000574-hf',trim_host) || strcmpi('c000674-hf',trim_host) || strcmpi('c000675-hf',trim_host) )
     logfile = ['/work/dur041/',outfilenow,'_',script_name,'.log'];
-elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || startsWith('crunchy',trim_host) || startsWith('gates',trim_host) )
+elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || startsWith(trim_host,'crunchy') || startsWith(trim_host,'gates') )
     logfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis',outfilenow,'_',script_name,'.log'];
 else
     logfile = [home_dir,outfilenow,'_',script_name,'.log'];
@@ -406,7 +406,7 @@ for ix = 1:length(xi) % for length(lon)
             outfile = ['/',trim_host,'1/dur041/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
         elseif ( strcmpi('c000573-hf',trim_host) || strcmpi('c000574-hf',trim_host) || strcmpi('c000674-hf',trim_host) || strcmpi('c000675-hf',trim_host) )
             outfile = ['/work/dur041/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
-        elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || startsWith('crunchy',trim_host) || startsWith('gates',trim_host) )
+        elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || startsWith(trim_host,'crunchy') || startsWith(trim_host,'gates') )
             outfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
         else
             outfile = ['/home/dur041/Shared/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
@@ -430,7 +430,7 @@ if ( strcmpi('larry',trim_host) || strcmpi('tracy',trim_host) || strcmpi('ingrid
     outfile = ['/',trim_host,'1/dur041/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
 elseif ( strcmpi('c000573-hf',trim_host) || strcmpi('c000574-hf',trim_host) || strcmpi('c000674-hf',trim_host) || strcmpi('c000675-hf',trim_host) )
     outfile = ['/work/dur041/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
-elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || startsWith('crunchy',trim_host) || startsWith('gates',trim_host) )
+elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || startsWith(trim_host,'crunchy') || startsWith(trim_host,'gates') )
     outfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
 else
     outfile = ['/home/dur041/Shared/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];

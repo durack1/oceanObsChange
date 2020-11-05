@@ -132,6 +132,7 @@
 % PJD 28 Oct 2020   - Updated to include git repo information
 % PJD  5 Nov 2020   - Run on crunchy to benchmark
 % PJD  5 Nov 2020   - Run on gates to benchmark
+% PJD  5 Nov 2020   - Update to set output path correctly on crunchy/gates
 
 warning off all % Suppress warning messages
 tic % Start timing script
@@ -178,7 +179,7 @@ if ( strcmpi('larry',trim_host) || strcmpi('tracy',trim_host) || strcmpi('ingrid
     logfile = ['/',trim_host,'1/dur041/',outfilenow,'_',script_name,'.log'];
 elseif ( strcmpi('c000573-hf',trim_host) || strcmpi('c000574-hf',trim_host) || strcmpi('c000674-hf',trim_host) || strcmpi('c000675-hf',trim_host) )
     logfile = ['/work/dur041/',outfilenow,'_',script_name,'.log'];
-elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || strcmpi('crunchy',trim_host) || strcmpi('gates',trim_host) )
+elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || startsWith('crunchy',trim_host) || startsWith('gates',trim_host) )
     logfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis',outfilenow,'_',script_name,'.log'];
 else
     logfile = [home_dir,outfilenow,'_',script_name,'.log'];
@@ -405,7 +406,7 @@ for ix = 1:length(xi) % for length(lon)
             outfile = ['/',trim_host,'1/dur041/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
         elseif ( strcmpi('c000573-hf',trim_host) || strcmpi('c000574-hf',trim_host) || strcmpi('c000674-hf',trim_host) || strcmpi('c000675-hf',trim_host) )
             outfile = ['/work/dur041/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
-        elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || strcmpi('crunchy',trim_host) || strcmpi('gates',trim_host) )
+        elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || startsWith('crunchy',trim_host) || startsWith('gates',trim_host) )
             outfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
         else
             outfile = ['/home/dur041/Shared/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
@@ -429,7 +430,7 @@ if ( strcmpi('larry',trim_host) || strcmpi('tracy',trim_host) || strcmpi('ingrid
     outfile = ['/',trim_host,'1/dur041/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
 elseif ( strcmpi('c000573-hf',trim_host) || strcmpi('c000574-hf',trim_host) || strcmpi('c000674-hf',trim_host) || strcmpi('c000675-hf',trim_host) )
     outfile = ['/work/dur041/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
-elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || strcmpi('crunchy',trim_host) || strcmpi('gates',trim_host) )
+elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || startsWith('crunchy',trim_host) || startsWith('gates',trim_host) )
     outfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
 else
     outfile = ['/home/dur041/Shared/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];

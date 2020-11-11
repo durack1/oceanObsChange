@@ -1,3 +1,29 @@
+Tue 10 Nov 2020 05:25:03 PM PST
+
+Followup with regenerating new obs inputs
+
+Salt WOD13/WOD18 histories
+OSD 1900-2012 (1772)
+CTD 1962-2012
+MBT 1942-2004?
+CBT 1967-2012
+Accuracy
+WOCE +/- 0.005
+Pre-WOCE +/- 0.01
+Argo +/- 0.01 to 0.005 in delayed mode
+
+
+Fri 05 Nov 2020 02:36:38 PM PST
+
+-bash-4.2$ date
+Thu Nov  5 14:35:31 PST 2020
+-bash-4.2$ ~/apps/MATLAB/R2020b/bin/matlab -nosplash -nodesktop -r "run('/export/durack1/git/oceanObs/fit_pres_1950_FLRdouble_sptg.m'); exit;" < /dev/null > /work/durack1/Shared/200428_data_OceanObsAnalysis/201105_1436_matlab9p9-crunchy.log
+
+-bash-4.2$ date
+Thu Nov  5 14:36:59 PST 2020
+-bash-4.2$ ~/apps/MATLAB/R2020b/bin/matlab -nosplash -nodesktop -r "run('/export/durack1/git/oceanObs/fit_pres_1950_FLRdouble_sptg.m'); exit;" < /dev/null > /work/durack1/Shared/200428_data_OceanObsAnalysis/201105_1437_matlab9p9-gates.log
+
+
 Wed 28 Oct 2020 12:51:59 PM PDT
 
 Updated for git repo info; Matlab R2020b update 1

@@ -133,6 +133,7 @@
 % PJD  5 Nov 2020   - Run on crunchy to benchmark
 % PJD  5 Nov 2020   - Run on gates to benchmark
 % PJD  5 Nov 2020   - Update to set output path correctly on crunchy/gates
+% PJD 19 Nov 2020   - Update to terminate from within script
 
 warning off all % Suppress warning messages
 tic % Start timing script
@@ -460,3 +461,6 @@ diary off % Close diary file and release file handle
 %    diary off % In case that script aborts, close diary file and release file handle
 %    disp('* Error encountered and caught - requested memory freed back to the system *')
 %end
+
+%% Terminate matlab instance
+exit

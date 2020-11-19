@@ -60,7 +60,6 @@ function [x,y,s,pt,src] = get_presdata(save2file)
 % PJD  8 Apr 2009   - Updated to write explicitly to local disk first, then move to home_dir
 % PJD  8 Apr 2009   - Updated multithread details, and home_dir creation
 % PJD  8 Apr 2009   - variables too big for -v7 flag, updating to v7.3
-%}
 % PJD 15 Apr 2011   - Updated to use latest Argo data..
 % PJD 15 Apr 2011   - Converted outfile to save to -v7 data, was -v7.3
 % PJD 16 Apr 2011   - Included *nodupes* and *exclude* profiles removal before running

@@ -1,3 +1,20 @@
+Tue 22 Dec 2020 01:35:05 PM PST
+
+>> ver
+-----------------------------------------------------------------------------------------------------
+MATLAB Version: 9.9.0.1538559 (R2020b) Update 3
+MATLAB License Number: 732613
+Operating System: Linux 3.10.0-1127.19.1.el7.x86_64 #1 SMP Tue Aug 11 19:12:04 EDT 2020 x86_64
+Java Version: Java 1.8.0_202-b08 with Oracle Corporation Java HotSpot(TM) 64-Bit Server VM mixed mode
+-----------------------------------------------------------------------------------------------------
+MATLAB                                                Version 9.9         (R2020b)
+Curve Fitting Toolbox                                 Version 1.1.7       (R2007a)
+GSW Oceanographic Toolbox                             Version 3.05        (R2012a)
+M_Map - mapping toolbox (Author: rich@eos.ubc.ca)     Version 1.4h        Nov     
+SEAWATER Library                                      Version 3.3                 
+Statistics and Machine Learning Toolbox               Version 12.0        (R2020b)
+
+
 Tue 22 Dec 2020 01:18:11 PM PST
 
 >> ver

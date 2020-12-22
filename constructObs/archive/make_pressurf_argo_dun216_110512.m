@@ -29,7 +29,7 @@
 % make_pressurf_argo_dun216.m
 %
 % Paul J. Durack 14 Apr 2011
-%{
+
 % PJD 14 Apr 2011   - Removed all conditional calls using gamn_check (not using neutral density)
 % PJD 14 Apr 2011   - Edits below and to make_pressurf are now ensuring profiles with valid s,t,p are getting
 %                     processed - most issues (ind: 1:~10000) appear to be for profiles with invalid (NaN) pressure
@@ -39,24 +39,21 @@
 % PJD  3 May 2011   - TODO: reuse make_pressurf and chase down out of climatological bounds salinity values
 %                     in particular 16.0's exist!
 % PJD 13 May 2011   - Commented pv and mgs variables (current make_gamrfsurf returns NaN profiles)
-%}
-% PJD 22 Dec 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/Obs_Data/Argo/code/make_pressurf_argo_dun216.m (110512)
-%                     and updated input
 
 % Cleanup workspace and command window
 clear, clc, close all
 % Initialise environment variables - only home_dir needed for file cleanups
-[home_dir,work_dir,data_dir,obs_dir,username,a_host_longname,maxThreads,a_opengl,a_matver] = myMatEnv(2);
-if ~sum(strcmp(username,{'dur041','duro','durack1'})); disp('**myMatEnv - username error**'); keyboard; end
+[home_dir,work_dir,data_dir,username,a_host_longname,maxThreads,a_opengl,a_matver] = myMatEnv(2);
+if ~sum(strcmp(username,{'dur041','duro'})); disp('**myMatEnv - username error**'); keyboard; end
 
 % Create log file and dob variable for output file
 file_date = [datestr(now,11),datestr(now,5),datestr(now,7)];
-logfile = [obs_dir,'Argo/code/',file_date,'_make_pressurf_argo_dun216.log'];
+logfile = [home_dir,'Obs_Data/Argo/code/',file_date,'_make_pressurf_argo_dun216.log'];
 [~,~] = unix(['rm -rf ',logfile]);
 diary(logfile)
 
 % Specify file author name
-a_author = 'pauldurack@llnl.gov; +1 925 422 5208; Lawrence Livermore National Laboratory, Livermore, California, USA';
+a_author = ['Paul Durack; Paul.Durack@csiro.au (',username,'); +61 3 6232 5283; CSIRO CMAR Hobart'];
 % Obtain this scriptname and time initialised
 a_script_name = mfilename;
 a_script_start_time = [datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)];

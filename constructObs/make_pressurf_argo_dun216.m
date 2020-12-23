@@ -43,6 +43,7 @@
 % PJD 22 Dec 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/Obs_Data/Argo/code/make_pressurf_argo_dun216.m (110512)
 %                     and updated input
 % PJD 22 Dec 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/code/make_pressurf.m (110512) and updated input
+% PJD 23 Dec 2020   - Updating for latest input; Added rmpath to cleanup links
 
 % Cleanup workspace and command window
 clear, clc, close all

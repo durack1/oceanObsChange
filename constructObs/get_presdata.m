@@ -82,7 +82,7 @@ function [x,y,s,pt,src] = get_presdata(save2file)
 % PJD 10 Nov 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/code/get_presdata.m (110516)
 %                     and updated input
 % PJD 22 Dec 2020   - Further tweaks for new input data
-% PJD 23 Dec 2020   - Updating for latest input
+% PJD 23 Dec 2020   - Updating for latest input; Added rmpath to cleanup links
 
 %% Cleanup workspace and command window
 clear, clc, close all

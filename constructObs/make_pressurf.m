@@ -112,7 +112,7 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
             disp('Problems with input data sizes..')
             keyboard
         end
-        
+
         % If missing top bit of S, remove these points (No interpolation will get them back..)
         if length(p) > depth_values % Check to make sure there are depth_values top points (assumes top of profile is near-surface)
             testlevel = depth_values;
@@ -125,7 +125,7 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
                 profile_s(isbad) = []; profile_t(isbad) = []; profile_p(isbad) = [];
             end % ~isempty(isbad)
         end % if sum(~isnan(profile_s(1:testlevel))) == 0
-        
+
         % Attempt to fix problems with trailing NaNs in SeHyD data
         if any(isnan(profile_s))
             isbad = find(isnan(profile_s));
@@ -133,14 +133,14 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
                 profile_s(isbad) = []; profile_t(isbad) = []; profile_p(isbad) = [];
             end % ~isempty(isbad)
         end % if any(isnan(profile_s))
-        
+
         if sum(~isnan(profile_s.*profile_t.*profile_p)) > depth_values % Check for more than depth_values points in profile
             % If missing T or P, remove data point in profile
             isbad = find(isnan(profile_p.*profile_t));
             if ~isempty(isbad)
                 profile_s(isbad) = []; profile_t(isbad) = []; profile_p(isbad) = [];
             end % ~isempty(isbad)
-            
+
             % If missing S fill by a P interpolation:
             if any(isnan(profile_s))
                 isgood = ~isnan(profile_s);
@@ -149,7 +149,7 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
                 sss = interp1q(ppp(:),sss(:),profile_p(~isgood));
                 profile_s(~isgood) = sss;
             end % if any(isnan(profile_s))
-            
+
             % Check to ensure NaN values are removed
             isbad = find(isnan(profile_p.*profile_t.*profile_s));
             if ~isempty(isbad)
@@ -159,16 +159,16 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
 
             %% Finally check for > depth_values valid points, and if so, prepare and interpolate data
             if length(profile_p) > depth_values
-                
+
                 % Create potential temperature (referenced to the surface)
                 profile_pt = sw_ptmp(profile_s,profile_t,profile_p,0.);
-                
+
                 % Correct for duplicate vertical levels and sort inversions
                 [profile_p,index] = unique(profile_p);
                 profile_s            = profile_s(index);
                 profile_pt           = profile_pt(index);
                 profile_t            = profile_t(index);
-                
+
                 % Create dynamic height WRT surface:
                 %{
                 gpan = sw_gpan(profile_s,profile_t,profile_p);
@@ -185,7 +185,7 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
                 end % ~isnan
                 %}
                 profile_mgs = NaN(1,length(pressure_levels));
-                
+
                 % Get Brunt-vaisala buoyancy frequency
                 %{
                 [~,~,N2] = bvfreq(profile_s(:),profile_t(:),profile_p(:)); % Divide by zero errors
@@ -224,7 +224,7 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
                 [~,index] = setdiff(1:length(pressure_levels),index_nan);
                 [gamrf,~,~] = gpoly16t(profile_s(index),profile_pt(index));
                 profile_gamrf = NaN(length(pressure_levels),1); profile_gamrf(index) = gamrf;
-                
+
                 % Now check that all values sit in a valid range, catch bad interpolation and convert to NaN
                 %{
                 index_s     = find( profile_s < s_range(1) | profile_s > s_range(2));
@@ -234,7 +234,7 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
                 profile_s(index2nan) = NaN; profile_t(index2nan) = NaN;
                 profile_pt(index2nan) = NaN;
                 %}
-                
+
             end % if length(p) > depth_values
         end % if sum(isnan(profile_s..
     end % if length(p) > depth_values

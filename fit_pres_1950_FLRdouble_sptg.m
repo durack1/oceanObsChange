@@ -134,7 +134,8 @@
 % PJD  5 Nov 2020   - Run on gates to benchmark
 % PJD  5 Nov 2020   - Update to set output path correctly on crunchy/gates
 % PJD 19 Nov 2020   - Update to terminate from within script
-% PJD 23 Dec 2020   - Update for latest obs 201223; Added rmpath to cleanup links 
+% PJD 23 Dec 2020   - Update for latest obs 201223; Added rmpath to cleanup links
+% PJD 23 Dec 2020   - Update SOI index (get_climind, and SOI inputs)
 
 warning off all % Suppress warning messages
 tic % Start timing script
@@ -177,7 +178,7 @@ clear a
 
 % Create dynamic time component to outfilename, so that file overwrites don't occur
 outfilenow = regexprep([datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)],':','');
-id_str = ['195001to202012_FLRdouble_sptg_detect','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
+id_str = ['195001to202012_FLRdouble_sptg_R2020bU3_detect','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
 
 if ( strcmpi('larry',trim_host) || strcmpi('tracy',trim_host) || strcmpi('ingrid',trim_host) )
     logfile = ['/',trim_host,'1/dur041/',outfilenow,'_',script_name,'.log'];
@@ -211,7 +212,7 @@ xscaleo = 2.0; yscaleo = 1.0; wmax = 0.2; nbinmin = 10; gross_std_scan = 5; lat_
 % Create time indexes
 %timespan = 50.0; timemid = 1975; timebin = 1950:10:2010; timescan = 10; % Original
 timebin = 1950:10:2020; timescan = 10;
-timespan = timebin(end)-timebin(1); timemid = timebin(1) + timespan/2; 
+timespan = timebin(end)-timebin(1); timemid = timebin(1) + timespan/2;
 
 %% Create parametric model of varying complexity
 % set the parametric local model:

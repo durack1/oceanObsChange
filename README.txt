@@ -216,8 +216,8 @@ Java Version: Java 1.8.0_202-b08 with Oracle Corporation Java HotSpot(TM) 64-Bit
 MATLAB                                                Version 9.9         (R2020b)
 Curve Fitting Toolbox                                 Version 1.1.7       (R2007a)
 GSW Oceanographic Toolbox                             Version 3.05        (R2012a)
-M_Map - mapping toolbox (Author: rich@eos.ubc.ca)     Version 1.4h        Nov     
-SEAWATER Library                                      Version 3.3                 
+M_Map - mapping toolbox (Author: rich@eos.ubc.ca)     Version 1.4h        Nov
+SEAWATER Library                                      Version 3.3
 Statistics and Machine Learning Toolbox               Version 12.0        (R2020b)
 
 
@@ -233,8 +233,8 @@ Java Version: Java 1.8.0_202-b08 with Oracle Corporation Java HotSpot(TM) 64-Bit
 MATLAB                                                Version 9.9         (R2020b)
 Curve Fitting Toolbox                                 Version 1.1.7       (R2007a)
 GSW Oceanographic Toolbox                             Version 3.05        (R2012a)
-M_Map - mapping toolbox (Author: rich@eos.ubc.ca)     Version 1.4h        Nov     
-SEAWATER Library                                      Version 3.3                 
+M_Map - mapping toolbox (Author: rich@eos.ubc.ca)     Version 1.4h        Nov
+SEAWATER Library                                      Version 3.3
 Statistics and Machine Learning Toolbox               Version 12.0        (R2020b)
 
 

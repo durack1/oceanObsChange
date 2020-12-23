@@ -42,12 +42,21 @@
 %}
 % PJD 22 Dec 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/Obs_Data/Argo/code/make_pressurf_argo_dun216.m (110512)
 %                     and updated input
+% PJD 22 Dec 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/code/make_pressurf.m (110512) and updated input
 
 % Cleanup workspace and command window
 clear, clc, close all
 % Initialise environment variables - only home_dir needed for file cleanups
 [home_dir,work_dir,data_dir,obs_dir,username,a_host_longname,maxThreads,a_opengl,a_matver] = myMatEnv(2);
 if ~sum(strcmp(username,{'dur041','duro','durack1'})); disp('**myMatEnv - username error**'); keyboard; end
+
+% Find repo version
+a = getGitInfo('../');
+a_gitHash = a.hash;
+a_gitBranch = a.branch;
+a_gitRemote = a.remote;
+a_gitUrl = a.url;
+clear a
 
 % Create log file and dob variable for output file
 file_date = [datestr(now,11),datestr(now,5),datestr(now,7)];
@@ -63,7 +72,8 @@ a_script_start_time = [datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr
 a_matlab_version = a_matver; clear a_matver
 
 %% Load Jeff's latest file - on native levels
-infile = os_path([data_dir,'observations/argo/argo_BOA_obs/argo_obs.mat']);
+%infile = os_path([data_dir,'observations/argo/argo_BOA_obs/argo_obs.mat']);
+infile = os_path([obs_dir,'Argo/CSIRO/201222/argo_obs.mat']);
 load(infile)
 
 % On standard levels in depth, not pressure - csl3
@@ -143,7 +153,7 @@ source_data = cell(1,num_profiles);
 counter = 1;
 
 % Run through Argo input files and process profiles within these
-for profilenum = 1:num_profiles;
+for profilenum = 1:num_profiles
     x_ = lon(profilenum);
     y_ = lat(profilenum);
     s_ = salt(profilenum,:);
@@ -154,7 +164,7 @@ for profilenum = 1:num_profiles;
     [profile_s,profile_t,profile_pt,profile_sig,profile_gamrf,profile_pv,profile_mgs,x_,y_] = make_pressurf(x_,y_,s_,t_,p_,pressure_levels,gamn_check);
     % Compare input and output vectors
     %format shortG; [profile_s(1:2:end),s_(1:2:79)',profile_pt(1:2:end),t_(1:2:79)',pressure_levels(1:2:end),p_(1:2:79)']
-    
+
     if any(~isnan(profile_s)) % Skip if no valid profile_s returned
         % Output from make_pressurf
         s(:,counter) = profile_s(:);
@@ -174,8 +184,8 @@ for profilenum = 1:num_profiles;
         counter = counter + 1;
     else %if 0 % convert to else to check
         disp(['* Skipped - all NaN: profilenum: ',num2str(profilenum),' wmo: ',num2str(stnno(profilenum)),' *']);
-        %{
         % Compare input and output vectors
+        %{
         format shortG
         % Check every second value to depth
         %[profile_s(1:2:end),s_(1:2:79)',profile_pt(1:2:end),t_(1:2:79)',pressure_levels(1:2:end),p_(1:2:79)']
@@ -185,7 +195,7 @@ for profilenum = 1:num_profiles;
         pause;
         %}
     end % if any(~isnan(profile_s))
-    
+
     if rem(profilenum,5000) == 0 % Display every 500 floats
         disp(['Completed ',sprintf('%06d',profilenum),' of ',sprintf('%06d',num_profiles),' floats with ',sprintf('%7d',counter-1),' profiles'])
     end % rem(file_num,250) == 0
@@ -215,7 +225,7 @@ source_data(isbad)  = [];
 disp('Removing all NaN profiles..')
 isbad_NaN = NaN(1,size(s,2));
 for counter = 1:size(s,2)
-    if find( all( isnan(s(:,counter)) ) );
+    if find( all( isnan(s(:,counter)) ) )
         isbad_NaN(counter) = counter;
     end
 end
@@ -262,14 +272,17 @@ for levels = 5:-1:1
     for value = index(1:length(index))
         gamrf(levels,value) = gamrf(levels+1,value);
     end
-    %index = find( isnan(pv(levels,:)) );
-    %for value = index(1:length(index))
-    %    pv(levels,value) = pv(levels+1,value);
-    %end
-    %index = find( isnan(mgs(levels,:)) );
-    %for value = index(1:length(index))
-    %    mgs(levels,value) = mgs(levels+1,value);
-    %end
+    % Not used in analysis: pv, mgs
+    %{
+    index = find( isnan(pv(levels,:)) );
+    for value = index(1:length(index))
+       pv(levels,value) = pv(levels+1,value);
+    end
+    index = find( isnan(mgs(levels,:)) );
+    for value = index(1:length(index))
+       mgs(levels,value) = mgs(levels+1,value);
+    end
+    %}
 end
 
 %% Now assign a basin mask value - using the 2x1 degree grid
@@ -300,16 +313,17 @@ clear basin_lon_index basin_lat_index basin_lon basin_lat
 %% Convert time dimension to useful components
 disp('Create time_decimal variable..')
 time_elements = datevec(time_serial)'; % Convert serial time to it's 6 elements
-blank = zeros(size(time_elements,1),1);
-time_decimal = (double(time_elements(:,1))+(datenum([blank,double(time_elements(:,2:3)),blank,blank,blank])/365.25));
+blank = zeros(size(time_elements,2),1);
+time_decimal = (double(time_elements(1,:))'+(datenum([blank,double(time_elements(2:3,:))',blank,blank,blank])/365.25))';
 
 %% Write out all data to file
-outfile = [home_dir,'Obs_Data/Argo/',file_date,'_argofloat_dun216_pressurf_global.mat'];
+outfile = [home_dir,'obs_data/Argo/',file_date,'_argofloat_dun216_pressurf_global.mat'];
 delete(outfile);
 save(outfile,'s','t','pt','sig','gamrf','-v7');
 %save(outfile,'s','t','pt','sig','gamrf','pv','mgs','-v7');
 save(outfile,'pressure_levels','num_profiles','x','y','time_serial','time_elements','time_decimal','num','wmo_code','basin_nums','basin_num_lons','basin_num_lats','source_data','-append','-v7');
 save(outfile,'a_host_longname','a_author','a_script_name','a_script_start_time','a_matlab_version','-append','-v7');
+save(outfile,'a_gitHash','a_gitBranch','a_gitRemote','a_gitUrl','-append');
 disp(['Completed ',int2str(profilenum),' of ',int2str(num_profiles),' floats with ',int2str(profile_count-1),' profiles']);
 disp([' File: ',outfile,' complete']);
 

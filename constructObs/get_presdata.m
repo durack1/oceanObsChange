@@ -250,7 +250,7 @@ test_no = 0; index_dup_sodb_hb2_uniq = 1; dup_hb2sehyd = 1; dup_sodbsehyd = 1; d
 while ~isempty(index_dup_sodb_hb2_uniq) % while test_no < 6
     test_no = test_no + 1; disp(['Test loop: ',num2str(test_no)])
     index_hb2 = find(src==2); index_sehyd = find(src==3); index_sodb = find(src==4);
-    
+
     % Now compare each of the smaller datasets to the master dataset SeHyD
     if ~isempty(dup_hb2sehyd)
         % SeHyD vs HB2
@@ -262,7 +262,7 @@ while ~isempty(index_dup_sodb_hb2_uniq) % while test_no < 6
     else
         disp('SeHyD vs HB2 comparison complete, all dupes removed')
     end
-    
+
     if ~isempty(dup_sodbsehyd)
         % SeHyD vs SODB
         disp('Begin SeHyD vs SODB comparison..'); %tic
@@ -273,7 +273,7 @@ while ~isempty(index_dup_sodb_hb2_uniq) % while test_no < 6
     else
         disp('SeHyD vs SODB comparison complete, all dupes removed')
     end
-    
+
     if ~isempty(dup_hb2sodb)
         % SODB vs HB2
         disp('Begin SODB vs HB2 comparison..'); %tic
@@ -284,29 +284,29 @@ while ~isempty(index_dup_sodb_hb2_uniq) % while test_no < 6
     else
         disp('SODB vs HB2 comparison complete, all dupes removed')
     end
-    
+
     % Now use the duplicate list and start dropping out profiles in priority order
     % Recheck the data for duplicates - there should be none!
-    
+
     % First go to SODB and knock out all dupes with both SeHyD and HB2
     dup_sodb = [dup_hb2sodb_pairs,dup_sodbsehyd]; % Should include SODB [1:92641] and HB2 numbers [355099:1526424]
     dup_sodb_uniq = unique(dup_sodb);
     % Below is index of current duplicates in SODB data (with SeHyD and HB2)
     [~,index_dup_sodb] = ismember(dup_sodb_uniq,wmo_code); % Vectorised
-    
+
     % Go to HB2 and knock out all dupes with SeHyD
     dup_hb2 = dup_hb2sehyd; % Include dup_sehydhb2_pairs var
     dup_hb2_uniq = unique(dup_hb2);
     % Below is index of current duplicates in HB2 data (with SeHyD)
     [~,index_dup_hb2] = ismember(dup_hb2_uniq,wmo_code); % Vectorised
-    
+
     % Now go back to SODB and knock out all dupes with HB2
-    
+
     % Now create master list, load input data, clear duplicates and retest
     index_dup_sodb_hb2 = [index_dup_sodb,index_dup_hb2];
     index_dup_sodb_hb2_uniq = unique(index_dup_sodb_hb2);
     disp(['* Total duplicates in SODB and HB2: ',num2str(length(index_dup_sodb_hb2_uniq)),' Removing these from composite file..'])
-    
+
     % Clear variable and retest
     s(:,index_dup_sodb_hb2_uniq)                = [];
     t(:,index_dup_sodb_hb2_uniq)                = [];

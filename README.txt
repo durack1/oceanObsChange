@@ -1,3 +1,10 @@
+Wed 23 Dec 2020 03:12:05 PM PST
+
+(base) bash-4.2$ date
+Wed Dec 23 15:13:02 PST 2020
+-bash-4.2$ ~apps/MATLAB/R2020b/bin/matlab -nosplash -nodesktop -r "run('/export/durack1/git/oceanObs/fit_pres_1950_FLRdouble_sptg.m');" < /dev/null > /work/durack1/Shared/200428_data_OceanObsAnalysis/201223_1513_matlab9p9Upd3.log
+
+
 Tue 22 Dec 2020 02:24:07 PM PST
 
 monica01-hba /home/eez_data> cd

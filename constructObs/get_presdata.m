@@ -83,6 +83,7 @@ function [x,y,s,pt,src] = get_presdata(save2file)
 %                     and updated input
 % PJD 22 Dec 2020   - Further tweaks for new input data
 % PJD 23 Dec 2020   - Updating for latest input; Added rmpath to cleanup links
+% PJD 23 Dec 2020   - Updating for latest Argo input
 
 %% Cleanup workspace and command window
 clear, clc, close all
@@ -127,7 +128,7 @@ wmo_hb2_bad = wmo_code(ind); clear wmo_code*
 %% Process latest Argo Data
 % a_script_name = make_pressurf_argo_dun216
 %infile = os_path([home_dir,'Obs_Data/Argo/110516_argofloat_dun216_pressurf_global.mat']);
-infile = os_path([obs_dir,'Argo/201222_argofloat_dun216_pressurf_global.mat']);
+infile = os_path([obs_dir,'Argo/201223_argofloat_dun216_pressurf_global.mat']);
 load(infile,'x','y','s','t','pt','sig','gamrf','time_serial','wmo_code','basin_nums');
 % Allocate src variable
 src         = ones(size(time_serial)); % Mark 1: Argo, 2: HB2, 3: SeHyD, 4: SODB

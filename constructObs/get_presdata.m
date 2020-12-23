@@ -81,37 +81,52 @@ function [x,y,s,pt,src] = get_presdata(save2file)
 
 % PJD 10 Nov 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/code/get_presdata.m (110516)
 %                     and updated input
+% PJD 22 Dec 2020   - Further tweaks for new input data
+% PJD 23 Dec 2020   - Updating for latest input
 
-% - Must include latest Argo file scan though..
-
-% Cleanup workspace and command window
+%% Cleanup workspace and command window
 clear, clc, close all
 % Initialise environment variables - only home_dir needed for file cleanups
-[home_dir,work_dir,~,username,a_host_longname,a_maxThreads,~,a_matver] = myMatEnv(2);
-if ~sum(strcmp(username,{'dur041','duro'})); disp('**myMatEnv - username error**'); keyboard; end
+[home_dir,work_dir,data_dir,obs_dir,username,a_host_longname,a_maxThreads,a_opengl,a_matver] = myMatEnv(maxThreads);
+if ~sum(strcmp(username,{'dur041','duro','durack1'})); disp('**myMatEnv - username error**'); keyboard; end
+
+% Cleanup erroneous paths
+rmpath('work/durack1/Shared/code')
 
 % Create dob variables: when/where/who/why files were created - good for audit trail
 % Specify file author name
-a_author = ['Paul Durack; Paul.Durack@csiro.au (',username,'); +61 3 6232 5283; CSIRO CMAR Hobart'];
+%a_author = ['Paul Durack; Paul.Durack@csiro.au (',username,'); +61 3 6232 5283; CSIRO CMAR Hobart'];
+a_author = 'pauldurack@llnl.gov; +1 925 422 5208; Lawrence Livermore National Laboratory, Livermore, California, USA';
 % Obtain this scriptname and time initialised
 a_script_name = [mfilename('fullpath'),'.m'];
 a_script_start_time = [datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)];
 
-% Check for intput arguments and create if unassigned (assume global)
+% Find repo version
+a = getGitInfo('../');
+a_gitHash = a.hash;
+a_gitBranch = a.branch;
+a_gitRemote = a.remote;
+a_gitUrl = a.url;
+clear a
+
+%% Check for input arguments and create if unassigned (assume global)
 if nargin < 1, save2file = 1; end % 0 = off
 
 %% Create index of bad HB2 profiles - before variables are built
-infile = os_path([home_dir,'090408_pressurf_global_nodupes_exclude.mat']);
+%infile = os_path([home_dir,'090408_pressurf_global_nodupes_exclude.mat']);
+infile = os_path([home_dir,'090605_FLR2_sptg/','090408_pressurf_global_nodupes_exclude.mat']);
 load(infile,'wmo_code');
 wmo_code_exclude = wmo_code; clear wmo_code
-infile = os_path([home_dir,'_obsolete/090408_pressurf_global_nodupes.mat']);
+%infile = os_path([home_dir,'_obsolete/090408_pressurf_global_nodupes.mat']);
+infile = '/work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/_obsolete/090408_pressurf_global_nodupes.mat';
 load(infile,'wmo_code');
 ind = ~ismember(wmo_code,wmo_code_exclude);
 wmo_hb2_bad = wmo_code(ind); clear wmo_code*
 
 %% Process latest Argo Data
 % a_script_name = make_pressurf_argo_dun216
-infile = os_path([home_dir,'Obs_Data/Argo/110516_argofloat_dun216_pressurf_global.mat']);
+%infile = os_path([home_dir,'Obs_Data/Argo/110516_argofloat_dun216_pressurf_global.mat']);
+infile = os_path([obs_dir,'Argo/201222_argofloat_dun216_pressurf_global.mat']);
 load(infile,'x','y','s','t','pt','sig','gamrf','time_serial','wmo_code','basin_nums');
 % Allocate src variable
 src         = ones(size(time_serial)); % Mark 1: Argo, 2: HB2, 3: SeHyD, 4: SODB
@@ -133,7 +148,8 @@ basin_nums_NaN  = basin_nums; clear basin_nums
 src_NaN         = src; clear src
 
 % Load Hydrobase2 data
-infile = os_path([home_dir,'Obs_Data/Hydrobase2/110516_pressurf_global_hb2.mat']);
+%infile = os_path([home_dir,'Obs_Data/Hydrobase2/110516_pressurf_global_hb2.mat']);
+infile = os_path([obs_dir,'Hydrobase2/110516_pressurf_global_hb2.mat']);
 load(infile,'x','y','s','t','pt','sig','gamrf','time_serial','wmo_code','basin_nums');
 
 % Append to existing variables
@@ -166,7 +182,8 @@ basin_nums_NaN  = basin_nums; clear basin_nums
 src_NaN         = src; clear src
 
 % Load SeHyD data
-infile = os_path([home_dir,'Obs_Data/SeHyD/110516_sehyd-ow_pressurf_global.mat']);
+%infile = os_path([home_dir,'Obs_Data/SeHyD/110516_sehyd-ow_pressurf_global.mat']);
+infile = os_path([obs_dir,'SeHyD/110516_sehyd-ow_pressurf_global.mat']);
 load(infile,'x','y','s','t','pt','sig','gamrf','time_serial','wmo_code','basin_nums');
 
 % Append to existing variables
@@ -199,7 +216,8 @@ basin_nums_NaN  = basin_nums; clear basin_nums
 src_NaN         = src; clear src
 
 % Load SODB data
-infile = os_path([home_dir,'Obs_Data/SODB/110516_sodb_pressurf_global.mat']);
+%infile = os_path([home_dir,'Obs_Data/SODB/110516_sodb_pressurf_global.mat']);
+infile = os_path([obs_dir,'SODB/110516_sodb_pressurf_global.mat']);
 load(infile,'x','y','s','t','pt','sig','gamrf','time_serial','wmo_code','basin_nums');
 
 % Append to existing variables
@@ -248,7 +266,7 @@ src(ind_bad)                = [];
 disp('Remove duplicates in SODB and HB2 data..')
 test_no = 0; index_dup_sodb_hb2_uniq = 1; dup_hb2sehyd = 1; dup_sodbsehyd = 1; dup_hb2sodb = 1;
 while ~isempty(index_dup_sodb_hb2_uniq) % while test_no < 6
-    test_no = test_no + 1; disp(['Test loop: ',num2str(test_no)])
+    test_no = test_no + 1; disp('----------'); disp(['Test loop: ',num2str(test_no)])
     index_hb2 = find(src==2); index_sehyd = find(src==3); index_sodb = find(src==4);
 
     % Now compare each of the smaller datasets to the master dataset SeHyD
@@ -328,21 +346,16 @@ clear dup_* index* test_no % index_dup_sodb_hb2_uniq and test_no required in loo
 %% Save file
 load([home_dir,'pressure_levels.mat'], 'pressure_levels');
 if save2file
-    outdir = work_dir;
+    outdir = os_path([home_dir,'200428_data_OceanObsAnalysis/']);
     % Write out to local disk, and once file is written move to home_dir
     outfile = [[datestr(now,11),datestr(now,5),datestr(now,7)],'_pressurf_global_nodupes_exclude.mat'];
+    %[~,~] = unix(['rm -rf ',[outdir,outfile]]);
     delete([outdir,outfile]);
     disp(['Saving file: ',outdir,outfile])
     save([outdir,outfile],'s','t','pt','sig','gamrf','-v7');
     save([outdir,outfile],'pressure_levels','x','y','time_serial','time_elements','time_decimal','src','wmo_code','basin_nums','-append','-v7');
     save([outdir,outfile],'a_host_longname','a_author','a_script_name','a_script_start_time','a_matver','a_maxThreads','-append','-v7');
-    if isunix
-        [~,~] = unix(['rm -rf ',[home_dir,outfile]]);
-        [~,~] = unix(['mv ',[outdir,outfile],' ',[home_dir,outfile]]);
-    elseif ispc
-        [~,~] = dos(['del /F ',[home_dir,outfile]]);
-        [~,~] = dos(['move ',[outdir,outfile],' ',[home_dir,outfile]]);
-    end
+    save([outdir,outfile],'a_gitHash','a_gitBranch','a_gitRemote','a_gitUrl','-append','-v7');
 end % if save2file
 
 end % function

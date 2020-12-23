@@ -21,6 +21,7 @@ function [profile_s,profile_t,profile_pt,profile_sig,profile_gamrf,profile_pv,pr
 %
 % Paul J. Durack 13 May 2008
 
+%{
 % PJD 13 May 2008   - Copied content from ~/Shared/Hydrobase2/code/make_pressurf_hb2_wmo.m
 % PJD 20 May 2008   - Included code for gamma_n creation (This code writes ascii data into a local dir file,
 %                     reads this and deletes these, so it may take time to run..)
@@ -56,6 +57,9 @@ function [profile_s,profile_t,profile_pt,profile_sig,profile_gamrf,profile_pv,pr
 %                     sparse interpolation, falls over on file 1302btl
 % PJD 12 May 2011   - Added code to test for unique pressure values, fix problem with HB2: 1302btl; filenum: 90, profile_num: 3559 above
 % PJD 12 May 2011   - Removed duplicate if sum(~isnan(profile_s.*profile_t.*profile_p)) > depth_values return NaN, variables already preallocated
+%}
+% PJD 22 Dec 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/code/make_pressurf.m (110512) and updated input
+% PJD 23 Dec 2020   - Updated default arg 6
 
 %% Check for valid inputs to function
 if nargin < 1, disp('Insufficient arguments provided..'), return, end
@@ -63,7 +67,7 @@ if nargin < 2, disp('Insufficient arguments provided..'), return, end
 if nargin < 3, disp('Insufficient arguments provided..'), return, end
 if nargin < 4, disp('Insufficient arguments provided..'), return, end
 if nargin < 5, disp('Insufficient arguments provided..'), return, end
-if nargin < 6, load('/home/dur041/Shared/pressure_levels.mat','pressure_levels'), end
+if nargin < 6, load('/work/durack1/Shared/pressure_levels.mat','pressure_levels'), end
 if nargin < 7, gamn = 0; end
 if nargin < 8, depth_values = 3; end
 
@@ -75,6 +79,8 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
     % Range check input data
     s_range = [6 42]; % Baltic Sea salinity can be 6-8psu: http://en.wikipedia.org/wiki/Baltic_Sea#Salinity
     s_range_clim = [32 38]; % Standard climatological mean salinities are 33:37 - print to screen if outside these
+    t_range = [-2.3 35];
+    p_range = [0 10000];
     if any( find( s < s_range(1) | s > s_range(2),1 ) )
         disp(['* Out of range: salinity : ',num2str(range(s),'%9.3f'),' - Skipping profile.. *'])
         %keyboard
@@ -82,13 +88,11 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
     elseif any( find( s < s_range_clim(1) | s > s_range_clim(2),1 ) )
         disp(['* Warning Only: Out of climatological range: salinity : ',num2str(range(s),'%9.3f'),' *'])
     end
-    t_range = [-2.3 35];
     if any( find( t < t_range(1) | t > t_range(2),1 ) )
         disp(['* Out of range: temperature : ',num2str(range(t),'%9.3f'),' - Skipping profile.. *'])
         %keyboard
         return
     end
-    p_range = [0 10000];
     if any( find( p < p_range(1) | p > p_range(2),1 ) )
         disp(['* Out of range: pressure : ',num2str(range(p),'%9.3f'),' - Skipping profile.. *'])
         %keyboard
@@ -105,7 +109,7 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
             disp('Problems with input data sizes..')
             keyboard
         end
-
+        
         % If missing top bit of S, remove these points (No interpolation will get them back..)
         if length(p) > depth_values % Check to make sure there are depth_values top points (assumes top of profile is near-surface)
             testlevel = depth_values;
@@ -118,7 +122,7 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
                 profile_s(isbad) = []; profile_t(isbad) = []; profile_p(isbad) = [];
             end % ~isempty(isbad)
         end % if sum(~isnan(profile_s(1:testlevel))) == 0
-
+        
         % Attempt to fix problems with trailing NaNs in SeHyD data
         if any(isnan(profile_s))
             isbad = find(isnan(profile_s));
@@ -126,14 +130,14 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
                 profile_s(isbad) = []; profile_t(isbad) = []; profile_p(isbad) = [];
             end % ~isempty(isbad)
         end % if any(isnan(profile_s))
-
+        
         if sum(~isnan(profile_s.*profile_t.*profile_p)) > depth_values % Check for more than depth_values points in profile
             % If missing T or P, remove data point in profile
             isbad = find(isnan(profile_p.*profile_t));
             if ~isempty(isbad)
                 profile_s(isbad) = []; profile_t(isbad) = []; profile_p(isbad) = [];
             end % ~isempty(isbad)
-
+            
             % If missing S fill by a P interpolation:
             if any(isnan(profile_s))
                 isgood = ~isnan(profile_s);
@@ -142,7 +146,7 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
                 sss = interp1q(ppp(:),sss(:),profile_p(~isgood));
                 profile_s(~isgood) = sss;
             end % if any(isnan(profile_s))
-
+            
             % Check to ensure NaN values are removed
             isbad = find(isnan(profile_p.*profile_t.*profile_s));
             if ~isempty(isbad)
@@ -152,16 +156,16 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
 
             %% Finally check for > depth_values valid points, and if so, prepare and interpolate data
             if length(profile_p) > depth_values
-
+                
                 % Create potential temperature (referenced to the surface)
                 profile_pt = sw_ptmp(profile_s,profile_t,profile_p,0.);
-
+                
                 % Correct for duplicate vertical levels and sort inversions
                 [profile_p,index] = unique(profile_p);
                 profile_s            = profile_s(index);
                 profile_pt           = profile_pt(index);
                 profile_t            = profile_t(index);
-
+                
                 % Create dynamic height WRT surface:
                 %{
                 gpan = sw_gpan(profile_s,profile_t,profile_p);
@@ -178,7 +182,7 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
                 end % ~isnan
                 %}
                 profile_mgs = NaN(1,length(pressure_levels));
-
+                
                 % Get Brunt-vaisala buoyancy frequency
                 %{
                 [~,~,N2] = bvfreq(profile_s(:),profile_t(:),profile_p(:)); % Divide by zero errors
@@ -217,7 +221,7 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
                 [~,index] = setdiff(1:length(pressure_levels),index_nan);
                 [gamrf,~,~] = gpoly16t(profile_s(index),profile_pt(index));
                 profile_gamrf = NaN(length(pressure_levels),1); profile_gamrf(index) = gamrf;
-
+                
                 % Now check that all values sit in a valid range, catch bad interpolation and convert to NaN
                 %{
                 index_s     = find( profile_s < s_range(1) | profile_s > s_range(2));
@@ -227,7 +231,7 @@ if ( sum(~isnan(s.*t.*p)) > depth_values && length(unique(p)) > depth_values )
                 profile_s(index2nan) = NaN; profile_t(index2nan) = NaN;
                 profile_pt(index2nan) = NaN;
                 %}
-
+                
             end % if length(p) > depth_values
         end % if sum(isnan(profile_s..
     end % if length(p) > depth_values

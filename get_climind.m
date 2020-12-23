@@ -38,6 +38,8 @@ function [time_ind,ind] = get_climind(clim_ind,nmonths,start_year)
 % PJD 13 Sep 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/code/get_climind.m (110609)
 % PJD 13 Sep 2020   - Updated SOI
 % PJD 14 Sep 2020   - Should consider updated SOI index - see NCEP link above
+% PJD 23 Dec 2020   - Updated SOI following https://climatedataguide.ucar.edu/sites/default/files/SOI.signal.txt
+%                   https://climatedataguide.ucar.edu/climate-data/southern-oscillation-indices-signal-noise-and-tahitidarwin-slp-soi
 %                   - TODO: incorporate volc forcing data (NOAA - Ammann)
 %                   - TODO: incorporate volc forcing data (GISS - Sato)
 %                   - TODO: incorporate NCEP/ERA40 SAM etc - see /home/mui044/PCCSP/ncep_sam_index_20100713.mat
@@ -46,7 +48,7 @@ function [time_ind,ind] = get_climind(clim_ind,nmonths,start_year)
 % Specify variables, start years and input files
 clim_indexes =  {'soi','n34','pdo','sam','nao','amo','sol','vol'};
 clim_startyrs = [1866, 1871, 1900, 1957, 1865, 1856, 1947, 1890];
-clim_files = {'SOI_1866-2016_Trenberth', ...
+clim_files = {'SOI_186601-202001_Trenberth', ...
               'Nino3.4_1871-2007_smoothed', ...
               'PDO_1900-2011_Mantua', ...
               'SAM_1957-2011_Marshall', ...

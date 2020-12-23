@@ -134,20 +134,22 @@
 % PJD  5 Nov 2020   - Run on gates to benchmark
 % PJD  5 Nov 2020   - Update to set output path correctly on crunchy/gates
 % PJD 19 Nov 2020   - Update to terminate from within script
+% PJD 23 Dec 2020   - Update for latest obs 201223; Added rmpath to cleanup links 
 
 warning off all % Suppress warning messages
 tic % Start timing script
 addpath('/export/durack1/git/oceanObs')
+rmpath('/work/durack1/Shared/code')
 
 %% Set multi-thread conditions
-[~, mat_version, mat_patch_version] = matlab_mode; clear command mat_patch*
+[~, mat_version, ~] = matlab_mode; clear command mat_patch*
 a_multithread_num = 2; % Set number of target threads
 maxNumCompThreads(a_multithread_num); % Enable multi-threading V7.5+
 
 %% Create 'dob' variables
 % Create variables that will enable dob in info on when/where/who/why files were created - good for audit trail
 % Determine machine local disk: Outfile is written here, reducing crashes due to network problems
-[status, hostname] = unix('uname -n');
+[~, hostname] = unix('uname -n');
 trim_host = strtrim(hostname);
 a_host_longname = getenv('HOSTNAME');
 % Specify file author name
@@ -155,7 +157,8 @@ a_author = 'pauldurack@llnl.gov; +1 925 422 5208; Lawrence Livermore National La
 % Obtain this scriptname and time initialised
 script_name = 'fit_pres_1950_FLRdouble_sptg_200913';
 home_dir = '/export/durack1/git/oceanObs/';
-arch_dir = '/work/durack1/Shared/090605_FLR2_sptg/';
+%arch_dir = '/work/durack1/Shared/090605_FLR2_sptg/'; % Original data source
+obs_dir = '/work/durack1/Shared/200428_data_OceanObsAnalysis/';
 grab_dir = '/work/durack1/Shared/';
 a_script_name = [home_dir,'/',script_name,'.m']; % Needs to be explicitly written
 a_script_start_time = [datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)];
@@ -174,7 +177,7 @@ clear a
 
 % Create dynamic time component to outfilename, so that file overwrites don't occur
 outfilenow = regexprep([datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)],':','');
-id_str = ['1950_FLRdouble_sptg_gates','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
+id_str = ['195001to202012_FLRdouble_sptg_detect','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
 
 if ( strcmpi('larry',trim_host) || strcmpi('tracy',trim_host) || strcmpi('ingrid',trim_host) )
     logfile = ['/',trim_host,'1/dur041/',outfilenow,'_',script_name,'.log'];
@@ -204,19 +207,21 @@ str_lvls = length(isig); % Get length of levels to name output files
 
 %% Experiment with scale factors (window over which fitting occurs - spatial, time and gross data sampling/exclusion)
 %[Y, M, D, H, MN, S] = datevec(now); yearnow = Y;
-xscaleo = 2.0; yscaleo = 1.0; wmax = 0.2; nbinmin = 10;
-timespan = 50.0; timemid = 1975; timebin = 1950:10:2010; timescan = 10;
-gross_std_scan = 5; lat_scan = 10; lon_scan = 25;
+xscaleo = 2.0; yscaleo = 1.0; wmax = 0.2; nbinmin = 10; gross_std_scan = 5; lat_scan = 10; lon_scan = 25;
+% Create time indexes
+%timespan = 50.0; timemid = 1975; timebin = 1950:10:2010; timescan = 10; % Original
+timebin = 1950:10:2020; timescan = 10;
+timespan = timebin(end)-timebin(1); timemid = timebin(1) + timespan/2; 
 
 %% Create parametric model of varying complexity
 % set the parametric local model:
 p_space = @(x,y,time) [ones(length(x),1),x(:),x(:).^2,y(:),y(:).^2,x(:).*y(:) ]; % Quadratic in x and y
 p_sinu2 = @(x,y,time) [cos(2*pi*time(:)),sin(2*pi*time(:)),cos(2*pi*time(:)/0.5),sin(2*pi*time(:)/0.5)];
 % New attempt at capturing time effect on seasonal cycle % unimplemented
-p_sinu2t = @(x,y,time) [time(:).*cos(2*pi*time(:)),time(:).*sin(2*pi*time(:)),time(:).*cos(2*pi*time(:)/0.5),time(:).*sin(2*pi*time(:)/0.5)];
+%p_sinu2t = @(x,y,time) [time(:).*cos(2*pi*time(:)),time(:).*sin(2*pi*time(:)),time(:).*cos(2*pi*time(:)/0.5),time(:).*sin(2*pi*time(:)/0.5)];
 p_cc = @(x,y,time) (time-timemid)/timespan;
-p_cc2 = @(x,y,time) ((time-timemid)/timespan).^2; % New attempt at capturing quadratic in time % unimplemented
-p_cc3 = @(x,y,time) ((time-timemid)/timespan).^3; % New attempt at capturing cubic in time % unimplemented
+%p_cc2 = @(x,y,time) ((time-timemid)/timespan).^2; % New attempt at capturing quadratic in time % unimplemented
+%p_cc3 = @(x,y,time) ((time-timemid)/timespan).^3; % New attempt at capturing cubic in time % unimplemented
 
 % options to include spatial dependence of time terms
 p_sinu2x = @(x,y,time) [x(:).*cos(2*pi*time(:)),x(:).*sin(2*pi*time(:)),x(:).*cos(2*pi*time(:)/0.5),x(:).*sin(2*pi*time(:)/0.5)];
@@ -253,7 +258,8 @@ bad_data = deal( NaN(4000000,4) ); bad_data_count = 1;
 di = NaN(length(xi),length(yi));
 
 %% Load latest input data into memory
-load([arch_dir,'090408_pressurf_global_nodupes_exclude.mat'],'gamrf','s','pt','src','time_decimal','x','y','basin_nums'); % Trim down to components required only
+%load([arch_dir,'090408_pressurf_global_nodupes_exclude.mat'],'gamrf','s','pt','src','time_decimal','x','y','basin_nums'); % Trim down to components required only
+load([obs_dir,'201223_pressurf_global_nodupes_exclude.mat'],'gamrf','s','pt','time_decimal','x','y','basin_nums'); % Trim down to components required only
 botdepth = -1*etopo2v2(y,x); % Replaced from topongdc
 
 %% Loop through lons

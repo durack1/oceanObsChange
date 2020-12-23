@@ -59,7 +59,7 @@ function [profile_s,profile_t,profile_pt,profile_sig,profile_gamrf,profile_pv,pr
 % PJD 12 May 2011   - Removed duplicate if sum(~isnan(profile_s.*profile_t.*profile_p)) > depth_values return NaN, variables already preallocated
 %}
 % PJD 22 Dec 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/code/make_pressurf.m (110512) and updated input
-% PJD 23 Dec 2020   - Updated default arg 6
+% PJD 23 Dec 2020   - Updated default arg 6; Added rmpath to cleanup links
 
 %% Check for valid inputs to function
 if nargin < 1, disp('Insufficient arguments provided..'), return, end
@@ -70,6 +70,9 @@ if nargin < 5, disp('Insufficient arguments provided..'), return, end
 if nargin < 6, load('/work/durack1/Shared/pressure_levels.mat','pressure_levels'), end
 if nargin < 7, gamn = 0; end
 if nargin < 8, depth_values = 3; end
+
+% Cleanup erroneous paths
+rmpath('/work/durack1/Shared/code')
 
 %%  Preallocate output variables
 [profile_s,profile_t,profile_pt,profile_sig,profile_gamrf,profile_gamn,profile_pv,profile_mgs] = deal(NaN(length(pressure_levels),1));

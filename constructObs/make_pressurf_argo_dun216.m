@@ -50,6 +50,9 @@ clear, clc, close all
 [home_dir,work_dir,data_dir,obs_dir,username,a_host_longname,maxThreads,a_opengl,a_matver] = myMatEnv(2);
 if ~sum(strcmp(username,{'dur041','duro','durack1'})); disp('**myMatEnv - username error**'); keyboard; end
 
+% Cleanup erroneous paths
+rmpath('/work/durack1/Shared/code')
+
 % Find repo version
 a = getGitInfo('../');
 a_gitHash = a.hash;

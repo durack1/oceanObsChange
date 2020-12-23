@@ -92,7 +92,7 @@ clear, clc, close all
 if ~sum(strcmp(username,{'dur041','duro','durack1'})); disp('**myMatEnv - username error**'); keyboard; end
 
 % Cleanup erroneous paths
-rmpath('work/durack1/Shared/code')
+rmpath('/work/durack1/Shared/code')
 
 % Create dob variables: when/where/who/why files were created - good for audit trail
 % Specify file author name

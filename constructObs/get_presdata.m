@@ -87,7 +87,8 @@ function [x,y,s,pt,src] = get_presdata(save2file)
 %% Cleanup workspace and command window
 clear, clc, close all
 % Initialise environment variables - only home_dir needed for file cleanups
-[home_dir,work_dir,data_dir,obs_dir,username,a_host_longname,a_maxThreads,a_opengl,a_matver] = myMatEnv(maxThreads);
+%[home_dir,work_dir,data_dir,obs_dir,username,a_host_longname,a_maxThreads,a_opengl,a_matver] = myMatEnv(maxThreads);
+[home_dir,~,~,obs_dir,username,a_host_longname,a_maxThreads,~,a_matver] = myMatEnv(2);
 if ~sum(strcmp(username,{'dur041','duro','durack1'})); disp('**myMatEnv - username error**'); keyboard; end
 
 % Cleanup erroneous paths

@@ -1,3 +1,8 @@
+function make_levels(infile)
+% Generates diagnostic plots visualizing a selected analysis
+%
+% inputs:   infile - input mat file following standard analysis output format
+
 % Create level plots with EP or mean field overlay
 % Paul J. Durack 1 August 2007
 
@@ -58,7 +63,7 @@
 % PJD 17 May 2008   - Changed medtime axis to 1960-2000
 % PJD  3 Jun 2008   - Copied from 080515_3basins_79pres and updated input
 % PJD  3 Jun 2008   - Was plotting top levels only, so changed lvl variable to z_lvl
-% PJD  4 Jun 2008   - Converted long paths to include home_dir variable
+% PJD  4 Jun 2008   - Converted long paths to include homeDir variable
 % PJD 16 Jun 2008   - Converted to "dynamic" variables, as there are now 3 output vars
 % PJD 16 Jun 2008   - Cleaned up code, and incorporated more meaningful contouring
 % PJD 16 Jun 2008   - If variables to plot were statically named (mean, sc etc) then this would
@@ -120,50 +125,65 @@
 %                     recreate the surfaceDs fields for the gamrf files
 % PJD 15 Jun 2009   - Added paperplots variable
 %}
-% PJD 15 Sep 2020   - Copied from /work/durack1/Shared/090605_FLR2_sptg/make_levels.m (120324)
+% PJD 15 Sep 2020   - Copied from /wor/work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/090605_FLR2_sptg/make_levels.m (090615)
 %                     and updated input
+% PJD  6 Jan 2021   - Update to convert to function, infile as argument
+% PJD  6 Jan 2021   - Update to use myMatEnv (maxNumCompThreads)
+% PJD  7 Jan 2021   - Update to validate infile and extract parts
 
-a_multithread_num = 2; % Set number of target threads
-maxNumCompThreads(a_multithread_num); % Enable multi-threading V7.5+
-warning off all % Turn off inpaint_nans warnings
+%% Cleanup workspace and command window
+% Initialise environment variables - only homeDir needed for file cleanups
+%[homeDir,work_dir,data_dir,obsDir,username,a_host_longname,a_maxThreads,a_opengl,a_matver] = myMatEnv(maxThreads);
+[homeDir,~,~,obsDir,username,~,~,~,~] = myMatEnv(2);
+archiveDir = [homeDir,'090605_FLR2_sptg/'];
+if ~sum(strcmp(username,{'dur041','duro','durack1'})); disp('**myMatEnv - username error**'); keyboard; end
+paperplots = 0; % Turn off data generation for paperplots
 
-%% Clear workspace and set home_dir
-clear, close all
-if isunix
-    home_dir = '/home/dur041/Shared/';
-    [status,a_host_longname] = unix('hostname');
-elseif strcmp(computer,'PCWIN64')
-    home_dir = 'E:\Research\d14qq1s-hf\Shared\'; % Set home directory
-    [status,a_host_longname] = dos('hostname');
-else
-    home_dir = 'C:\Sync\Shared\'; % Set home directory
-    [status,a_host_longname] = dos('hostname');
-end
 %% Change the infile and pathnames
-paperplots = 1;
-sht_path = '090605_FLR2_sptg/';
-infile = '090605_190300_local_robust_1950_FLRdouble_sptg_79pres1000.mat';
-full_path = [home_dir,sht_path]; % Set full path
-outfile_dir = 'levels/'; % Set outfile subdir
-outfile_path = [full_path,outfile_dir]; % Set full outfile path
-if ~isdir(outfile_path) % Check outfile_path exists
-    mkdir(full_path,outfile_dir)
-    if ~isdir([outfile_path,'errors/'])
-    mkdir([full_path,outfile_dir,'errors/'])
+% Create inputs if they are not passed as arguments - check usage below..
+if nargin < 1, disp('No valid input file, exiting'); end
+if nargin > 1, disp('Too many arguments, exiting'); end
+if nargin == 1
+   % Validate input is matfile
+   if isfile(infile)
+       fclose('all');
+       [fid,~] = fopen(infile);
+       S = convertCharsToStrings(fread(fid,80,'uint8=>char')); % read 80 elements, captures all version and date info
+       ind = strfind(S,',');
+       fclose(fid); clear fid
+       matver = extractBefore(S,ind(1)); clear ind
+       disp(matver)
+       if contains(matver,'MAT-file')
+           [filePath,name,~] = fileparts(infile);
+           fileNameBits = split(name,'_'); % cell array
+           outPath = char(fullfile(filePath,join(fileNameBits([1,2,5,7:end]),'_')));
+           disp(outPath)
+       else
+           disp('No valid MAT-file, exiting')
+           quit
+       end % contains(matver
+   end % isfile(infile)
+end % nargin == 1
+
+%% Cleanup existing files
+outDir = 'levels/'; % Set outfile subdir
+outFilePath = fullfile(outPath,outDir); % Set full outfile path
+outFilePathErrors = fullfile(outFilePath,'errors/'); % Errors subpath
+if ~isfolder(outFilePath) % Check outFilePath exists
+    mkdir(outFilePath)
+    if ~isfolder(outFilePathErrors)
+        mkdir(outFilePathErrors)
     end
 else % Purge current *.png files
-    if strcmp(computer,'PCWIN') || strcmp(computer,'PCWIN64')
-        eval(['!del /F ',[regexprep(full_path,'/','\'),regexprep(outfile_dir,'/','\')],'*.png'])
-        eval(['!del /F ',[regexprep(full_path,'/','\'),regexprep(outfile_dir,'/','\'),'errors\'],'*.png']);
-    else % Assume Linux
-        eval(['!rm -f ',[full_path,outfile_dir],'*.png']);
-        eval(['!rm -f ',[full_path,outfile_dir,'errors/'],'*.png']);
-    end
+    % Assume Linux
+    eval(['!rm -f ',outFilePath,'*.png']);
+    eval(['!rm -f ',outFilePathErrors,'*.png']);
 end
 
+%%
 %%%%%%%%%% Load the NOC E-P matrices %%%%%%%%%%
 disp('* Load NOC flux data and smooth.. *')
-load([home_dir,'NOC/NOC.mat'], 'eminusp_ann', 'x', 'y');
+load([obsDir,'E-P/NOC/NOC.mat'], 'eminusp_ann', 'x', 'y');
 noc_lon = x; noc_lat = y; clear x y
 eminusp_smooth = NaN(size(eminusp_ann,1),size(eminusp_ann,2));
 eminusp_smooth(:,:,1) = eminusp_ann; eminusp_smooth(:,:,2) = eminusp_ann;
@@ -173,10 +193,9 @@ eminusp_ann = eminusp_smooth; clear eminusp_smooth
 %% Set plotting variables and load file
 smooth = 1; % Smooth input matrices?
 time_range = '((2000-1950)/50))';  time_rangen = (2000-1950)/50;
-infile_path = [full_path,infile];
-load(infile_path, 'sigma_levels', 'pressure_levels', 'sc')
+load(infile, 'sigma_levels', 'pressure_levels', 'sc')
 param_count = size(sc,4);
-infile_flat = regexprep([sht_path,infile],'_','\\_');
+infile_flat = regexprep(infile,'_','\\_');
 
 % Test z-levels and loop through each variable
 if exist('sigma_levels','var')
@@ -185,7 +204,7 @@ if exist('sigma_levels','var')
     var_str = {'pt','s'}; % {'p','pt','s'} % Turned off as p variable needs appropriate axis specification
     lvls = [1 6 11 21 31 41 51 61 71 81 91 96 101 111 121 131 141 151 161]; % Match levels with surfaceDs analysis
     % load surface forcing data
-    load([home_dir,'090605_FLR2_sptg/0906xx_surfaceDs.mat'], 'dens', 'lat_interp_chg_2000', 's_shift', 's_total');
+    load([homeDir,'090605_FLR2_sptg/0906xx_surfaceDs.mat'], 'dens', 'lat_interp_chg_2000', 's_shift', 's_total');
 else
     z_levels = pressure_levels;
     z_str = '-pres';
@@ -195,22 +214,24 @@ end
 
 for var = 1:length(var_str)
     % Load basin mask
-    load([home_dir,'code/make_basins.mat'], 'basins3_NaN_ones_2x1')
+    load([homeDir,'code/make_basins.mat'], 'basins3_NaN_ones_2x1')
     param_count = [1 7 8 9 10 19 22];
-    
+
     % Load subset of data
-    eval(['load(''',infile_path,''', ''',var_str{var},'mean'', ''',var_str{var},'n'', ''',var_str{var},'res'', ''',var_str{var},'xdatscale'', ''',var_str{var}, ...
-        'ydatscale'', ''',var_str{var},'medtime'', ''',var_str{var},'c'', ''',var_str{var},'ce'',''xi'',''yi'',''di'')'])
-    eval(['demo = ',var_str{var},'mean;'])
-    eval(['democ = ',var_str{var},'c;'])
-    
+    eval(['load(''',infile,''', ''',var_str{var},'mean'', ''',var_str{var},'n'', ''',var_str{var}, ...
+          'res'', ''',var_str{var},'xdatscale'', ''',var_str{var},'ydatscale'', ''',var_str{var}, ...
+          'medtime'', ''',var_str{var},'c'', ''',var_str{var},'ce'',''xi'',''yi'',''di'')'])
+    eval(['demo1 = ',var_str{var},'mean;'])
+    eval(['demo1c = ',var_str{var},'c;'])
+
     % Preallocate memory
-    [tmpmean,tmpn,tmpres,tmpxdatscale,tmpydatscale,tmpmedtime] = deal(NaN(size(demo)));
-    [tmpc,tmpce] = deal(NaN(size(democ)));
+    %keyboard
+    [tmpmean,tmpn,tmpres,tmpxdatscale,tmpydatscale,tmpmedtime] = deal(NaN(size(demo1)));
+    [tmpc,tmpce] = deal(NaN(size(demo1c)));
     % Generically fill all NaN values and overlay mask
     disp(['* Filling ocean matrices.. for variable: ',var_str{var},' *'])
-    for x = 1:size(demo,3) % There is a need to do ALL levels, otherwise smoothing produces and all NaN smoothed field
-        if rem(x,10) == 0, disp(['* Level: ',num2str(x),' of ',num2str(size(demo,3)),' for variable: ',var_str{var},' *']); end
+    for x = 1:size(demo1,3) % There is a need to do ALL levels, otherwise smoothing produces and all NaN smoothed field
+        if rem(x,10) == 0, disp(['* Level: ',num2str(x),' of ',num2str(size(demo1,3)),' for variable: ',var_str{var},' *']); end
         string = strcat('tmpmean(:,:,x) = (inpaint_nans(',var_str{var},'mean(:,:,x),2)).*basins3_NaN_ones_2x1'';'); cmd = char(string); eval(cmd);
         string = strcat('tmpn(:,:,x) = (inpaint_nans(',var_str{var},'n(:,:,x),2)).*basins3_NaN_ones_2x1'';'); cmd = char(string); eval(cmd);
         string = strcat('tmpres(:,:,x) = (inpaint_nans(',var_str{var},'res(:,:,x),2)).*basins3_NaN_ones_2x1'';'); cmd = char(string); eval(cmd);
@@ -222,11 +243,11 @@ for var = 1:length(var_str)
             string = strcat('tmpce(:,:,x,param_count(params)) = (inpaint_nans(squeeze(',var_str{var},'ce(:,:,x,param_count(params))),2)).*basins3_NaN_ones_2x1'';'); cmd = char(string); eval(cmd);
         end
     end
-    
+
     % Now load a subset of data from file (conserving memory requirements)
     eval(['clear ',var_str{var},'mean ',var_str{var},'n ',var_str{var},'res ',var_str{var},'xdatscale ',var_str{var}, ...
         'ydatscale ',var_str{var},'medtime ',var_str{var},'ce'])
-    
+
     if smooth
         % Generically smooth inputs for plotting if continuous in z space
         disp(['* Smoothing ocean matrices.. for variable: ',var_str{var},' *'])
@@ -244,14 +265,14 @@ for var = 1:length(var_str)
             ce(:,:,:,param_count(params)) = smooth3(squeeze(tmpce(:,:,:,param_count(params))));
         end
         clear tmpc tmpce
-        
+
         % There is a need to infill post a smooth, to get coastal points back
-        [tmpmean,tmpn,tmpres,tmpxdatscale,tmpydatscale,tmpmedtime] = deal(NaN(size(demo)));
-        [tmpc,tmpce] = deal(NaN(size(democ)));
+        [tmpmean,tmpn,tmpres,tmpxdatscale,tmpydatscale,tmpmedtime] = deal(NaN(size(demo1)));
+        [tmpc,tmpce] = deal(NaN(size(demo1c)));
         % Generically fill all NaN values and overlay mask
         disp(['* Filling ocean matrices.. for variable: ',var_str{var},' *'])
-        for x = 1:size(demo,3) % There is a need to do ALL levels, otherwise smoothing produces and all NaN smoothed field
-            if rem(x,10) == 0, disp(['* Level: ',num2str(x),' of ',num2str(size(demo,3)),' for variable: ',var_str{var},' *']); end
+        for x = 1:size(demo1,3) % There is a need to do ALL levels, otherwise smoothing produces and all NaN smoothed field
+            if rem(x,10) == 0, disp(['* Level: ',num2str(x),' of ',num2str(size(demo1,3)),' for variable: ',var_str{var},' *']); end
             tmpmean(:,:,x) = (inpaint_nans(mean(:,:,x),2)).*basins3_NaN_ones_2x1';
             tmpn(:,:,x) = (inpaint_nans(n(:,:,x),2)).*basins3_NaN_ones_2x1';
             tmpres(:,:,x) = (inpaint_nans(res(:,:,x),2)).*basins3_NaN_ones_2x1';
@@ -274,13 +295,13 @@ for var = 1:length(var_str)
     end % if smooth
 
     % Create a masking exclusion list using outcrops, depth and error field from input data
-    load([home_dir,'pressure_levels_var_minmax'], 'gamrfmean_max');
+    load([archiveDir,'090611_pressure_levels_var_minmax'], 'gamrfmean_max');
     gamrfmean_max = inpaint_nans(gamrfmean_max,2).*basins3_NaN_ones_2x1';
     chg_err = squeeze(ce(:,:,:,19));
 
     for ilvl = 1:length(z_levels)
         disp(['* Level: ',num2str(ilvl),' for variable: ',var_str{var},' *'])
-        if strcmp(z_str,'-dens');
+        if strcmp(z_str,'-dens')
             indexbad_gamrf = find( gamrfmean_max > sigma_levels(ilvl) ); % Mask outcrops obtained from seasonal max surface density field
         else
             indexbad_gamrf = [];
@@ -312,7 +333,7 @@ for var = 1:length(var_str)
         %keyboard, figure(1), clf, pcolor(xi,yi,imask_sigma'), shading interp, continents, title(num2str(sigma_levels(ilvl)))
     end % for ilvl = 1:length(sigma_levels)
     clear cindex* ilvl imask_sigma chg_err
-    
+
     for lvl = 1:length(lvls)
         z_lvl = lvls(lvl); % Fix for subset of z levels, when naming and titling plots
         disp(['processing level: ',num2str(z_levels(z_lvl)),' lvl: ',num2str(lvl)])
@@ -323,13 +344,13 @@ for var = 1:length(var_str)
                     contour_int1 = 0:50:500;
                     contour_int2 = 0:100:500;
                     change_axis = 10;
-                    axis_pair = [0 500]; 
+                    axis_pair = [0 500];
                 elseif z_levels(z_lvl) < 26
                     contour_int1 = 0:100:1000;
                     contour_int2 = 0:200:1000;
                     change_axis = 10;
-                    axis_pair = [0 1000];   
-                end                
+                    axis_pair = [0 1000];
+                end
             end
             if strcmp(var_str{var},'pt')
                 if z_levels(z_lvl) >= 27
@@ -351,7 +372,7 @@ for var = 1:length(var_str)
                     contour_int1 = 20:1.25:30;
                     contour_int2 = 20:2.5:30;
                     change_axis = 1.5;
-                    axis_pair = [20 30];                    
+                    axis_pair = [20 30];
                 end
             end
             if strcmp(var_str{var},'s')
@@ -421,23 +442,23 @@ for var = 1:length(var_str)
             duplicate = find(contour_int1 == contour_int2(x));
             if ~isempty(duplicate), contour_int1(duplicate) = []; end
         end
-        
+
 % Save variables out for final paper plotting - Need to include outcrop code
-if strcmp(var_str(var),'s') && (lvl == 1) && strcmp(z_str,'-dens') && paperplots; % Only save for first loop iteration for density data
-    file_name = [full_path,infile];
+if strcmp(var_str(var),'s') && (lvl == 1) && strcmp(z_str,'-dens') && paperplots % Only save for first loop iteration for density data
+    file_name = [outPath,infile];
     file_creation_time = [datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)];
     outdir = '090615_PaperPlots_Method/';
     disp('Saving variables for plotting ... ')
     keyboard
     if strcmp(computer,'PCWIN') || strcmp(computer,'PCWIN64')
-        eval(['!del /F ',home_dir,outdir,'fig10+11.mat']);
+        eval(['!del /F ',homeDir,outdir,'fig10+11.mat']);
     else % Assume Linux
-        eval(['!rm -f ',home_dir,outdir,'fig10+11.mat']);
+        eval(['!rm -f ',homeDir,outdir,'fig10+11.mat']);
     end
-    save([home_dir,outdir,'/fig10+11.mat'], 'xi', 'yi', 'z_levels', 'lvls', 'change_axis', 'file_name', 'file_creation_time', ...
+    save([homeDir,outdir,'/fig10+11.mat'], 'xi', 'yi', 'z_levels', 'lvls', 'change_axis', 'file_name', 'file_creation_time', ...
          'c', 'mean', 'contour_int1', 'contour_int2', 'time_rangen', 'lat_interp_chg_2000', 's_total', 's_shift');
 end
-        
+
         % Start plotting
         % Mean fields
         close all, handle = figure('Position',[100 100 800 800],'visible','off'); set(0,'CurrentFigure',handle), clmap(27)
@@ -449,15 +470,15 @@ end
         else
             contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int1,'-k');
             [c1,h] = contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int2,'-k','linewidth', 2);
-            clabel(c1,h,'LabelSpacing',100,'fontsize',10)  
+            clabel(c1,h,'LabelSpacing',100,'fontsize',10)
         end
-        
+
         % Now interrogate axis_pair for contouring levels
         range_interval = [-10 -5 -2 -1 -0.5 -0.25 -0.2 -0.1 -0.05 -0.025 -0.02 0.02 0.025 0.05 0.1 0.2 0.25 0.5 1 2 5 10 15 20 25 30 31 32 33 34 35 36 37 38 39 40];
-        [diff,range_low_ind] = min(abs(range_interval-axis_pair(1))); range_low = range_interval(range_low_ind);
-        [diff,range_high_ind] = min(abs(range_interval-axis_pair(2))); range_high = range_interval(range_high_ind);
+        [~,range_low_ind] = min(abs(range_interval-axis_pair(1))); range_low = range_interval(range_low_ind);
+        [~,range_high_ind] = min(abs(range_interval-axis_pair(2))); range_high = range_interval(range_high_ind);
         optim_step = (range_high-range_low)/10; % Changed from 5
-        [diff,step_index] = min(abs(range_interval-optim_step));
+        [~,step_index] = min(abs(range_interval-optim_step));
         cont_int = range_low:range_interval(step_index):range_high;
         cont_int(cont_int==0) = []; cont_int(cont_int < 0.00001 & cont_int > -0.00001) = []; % Fix for type errors
         cont_int_labels = range_low:(range_interval(step_index)/2):range_high;
@@ -469,15 +490,15 @@ end
         set(hh,'Position',[0.92 0.075 0.03 0.875]);
         set(gca,'Position',[0.075 0.075 0.82 0.875]);
         clear cont_int* range_l* range_h*
-        
+
         if strcmp(z_str,'-dens')
             title([var_str{var},'mean z\_level: ',sprintf('%4.2f',z_levels(z_lvl))])
-            saveas(gcf,[outfile_path,var_str{var},'mean',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,var_str{var},'mean',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
         else
             title([var_str{var},'mean z\_level: ',sprintf('%04d',z_levels(z_lvl))])
-            saveas(gcf,[outfile_path,var_str{var},'mean',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,var_str{var},'mean',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
         end
-        
+
         % Mean field errors
         axispair = [0 0.2];
         close all, handle = figure('Position',[100 100 800 800],'visible','off'); set(0,'CurrentFigure',handle), clmap(27)
@@ -490,14 +511,14 @@ end
         else
             contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int1,'-k');
             [c1,h] = contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int2,'-k','linewidth', 2);
-            clabel(c1,h,'LabelSpacing',100,'fontsize',10)  
+            clabel(c1,h,'LabelSpacing',100,'fontsize',10)
         end
-        
+
         % Now interrogate axis_pair for contouring levels
-        [diff,range_low_ind] = min(abs(range_interval-axispair(1))); range_low = range_interval(range_low_ind);
-        [diff,range_high_ind] = min(abs(range_interval-axispair(2))); range_high = range_interval(range_high_ind);
+        [~,range_low_ind] = min(abs(range_interval-axispair(1))); range_low = range_interval(range_low_ind);
+        [~,range_high_ind] = min(abs(range_interval-axispair(2))); range_high = range_interval(range_high_ind);
         optim_step = (range_high-range_low)/10; % Changed from 5
-        [diff,step_index] = min(abs(range_interval-optim_step));
+        [~,step_index] = min(abs(range_interval-optim_step));
         cont_int = range_low:range_interval(step_index):range_high;
         cont_int(cont_int==0) = []; cont_int(cont_int < 0.00001 & cont_int > -0.00001) = []; % Fix for type errors
         cont_int_labels = range_low:(range_interval(step_index)/2):range_high;
@@ -509,15 +530,15 @@ end
         set(hh,'Position',[0.92 0.075 0.03 0.875]);
         set(gca,'Position',[0.075 0.075 0.82 0.875]);
         clear cont_int* range_l* range_h*
-        
+
         if strcmp(z_str,'-dens')
             title([var_str{var},'meanerror z\_level: ',sprintf('%4.2f',z_levels(z_lvl))])
-            saveas(gcf,[outfile_path,'errors/',var_str{var},'meanerror',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,'errors/',var_str{var},'meanerror',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
         else
             title([var_str{var},'meanerror z\_level: ',sprintf('%04d',z_levels(z_lvl))])
-            saveas(gcf,[outfile_path,'errors/',var_str{var},'meanerror',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,'errors/',var_str{var},'meanerror',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
         end
-        
+
         % Residuals
         close all, handle = figure('Position',[100 100 800 800],'visible','off'); set(0,'CurrentFigure',handle), clmap(7)
         subplot 211
@@ -530,14 +551,14 @@ end
         else
             contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int1,'-k');
             [c1,h] = contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int2,'-k','linewidth', 2);
-            clabel(c1,h,'LabelSpacing',100,'fontsize',10)           
+            clabel(c1,h,'LabelSpacing',100,'fontsize',10)
         end
         if strcmp(z_str,'-dens')
             title([var_str{var},'res z\_level: ',sprintf('%4.2f',z_levels(z_lvl))])
         else
             title([var_str{var},'res z\_level: ',sprintf('%04d',z_levels(z_lvl))])
         end
-        
+
         % Number of Observations
         subplot 212
         pcolor(xi,yi,n(:,:,z_lvl)');
@@ -549,15 +570,15 @@ end
         else
             contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int1,'-k');
             [c1,h] = contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int2,'-k','linewidth', 2);
-            clabel(c1,h,'LabelSpacing',100,'fontsize',10)  
+            clabel(c1,h,'LabelSpacing',100,'fontsize',10)
         end
         title([var_str{var},'nobs'])
         if strcmp(z_str,'-dens')
-            saveas(gcf,[outfile_path,'errors/',var_str{var},'res-nobs',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,'errors/',var_str{var},'res-nobs',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
         else
-            saveas(gcf,[outfile_path,'errors/',var_str{var},'res-nobs',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,'errors/',var_str{var},'res-nobs',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
         end
-        
+
         % Plot lon and lat search/scale factors: sxdatscale/sydatscale and median time of search
         % x-data scale
         close all, handle = figure('Position',[100 100 800 800],'visible','off'); set(0,'CurrentFigure',handle), clmap(27)
@@ -569,30 +590,30 @@ end
         else
             title([var_str{var},'xdatscale z\_level: ',sprintf('%04d',z_levels(z_lvl))])
         end
-        
+
         % y-data scale
         subplot 212
         pcolor(xi,yi,ydatscale(:,:,z_lvl)');
         shading interp, caxis([0 20]), colorbar, continents, hold on
         title([var_str{var},'ydatscale'])
         if strcmp(z_str,'-dens')
-            saveas(gcf,[outfile_path,'errors/',var_str{var},'x-ydatscales_',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,'errors/',var_str{var},'x-ydatscales_',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
         else
-            saveas(gcf,[outfile_path,'errors/',var_str{var},'x-ydatscales_',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,'errors/',var_str{var},'x-ydatscales_',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
         end
-        
+
         % Median time
         close all, handle = figure('Position',[100 100 800 800],'visible','off'); set(0,'CurrentFigure',handle), clmap(27)
         pcolor(xi,yi,medtime(:,:,z_lvl)');
         shading interp, caxis([1960 2000]), colorbar, continents, hold on
         if strcmp(z_str,'-dens')
             title([var_str{var},'medtime z\_level: ',sprintf('%4.2f',z_levels(z_lvl))])
-            saveas(gcf,[outfile_path,'errors/',var_str{var},'medtime',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,'errors/',var_str{var},'medtime',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
         else
             title([var_str{var},'medtime z\_level: ',sprintf('%04d',z_levels(z_lvl))])
-            saveas(gcf,[outfile_path,'errors/',var_str{var},'medtime',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,'errors/',var_str{var},'medtime',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
         end
-        
+
         % Seasonal components (both Ann and SAnn) - Salinity
         imagine = 0 + 1.00000000000000i;
         % Ann
@@ -610,14 +631,14 @@ end
         else
             contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int1,'-k');
             [c1,h] = contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int2,'-k','linewidth', 2);
-            clabel(c1,h,'LabelSpacing',100,'fontsize',10)  
+            clabel(c1,h,'LabelSpacing',100,'fontsize',10)
         end
         if strcmp(z_str,'-dens')
             title([var_str{var},' phase ann ',' z\_level: ',sprintf('%4.2f',z_levels(z_lvl))])
         else
             title([var_str{var},' phase ann ',' z\_level: ',sprintf('%04d',z_levels(z_lvl))])
         end
-        
+
         amplitude_ann = abs(ann);
         subplot 212
         pcolor(xi,yi,amplitude_ann'), shading interp, caxis([-1,1]*0.1), colorbar, continents, hold on
@@ -628,15 +649,15 @@ end
         else
             contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int1,'-k');
             [c1,h] = contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int2,'-k','linewidth', 2);
-            clabel(c1,h,'LabelSpacing',100,'fontsize',10)  
+            clabel(c1,h,'LabelSpacing',100,'fontsize',10)
         end
         title([var_str{var},' amplitude ann'])
         if strcmp(z_str,'-dens')
-            saveas(gcf,[outfile_path,'errors/',var_str{var},'-ann7-8',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,'errors/',var_str{var},'-ann7-8',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
         else
-            saveas(gcf,[outfile_path,'errors/',var_str{var},'-ann7-8',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,'errors/',var_str{var},'-ann7-8',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
         end
-        
+
         % SAnn
         sann = squeeze(c(:,:,z_lvl,9)+ imagine*c(:,:,z_lvl,10));
         phase_sann = angle(sann);
@@ -651,14 +672,14 @@ end
         else
             contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int1,'-k');
             [c1,h] = contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int2,'-k','linewidth', 2);
-            clabel(c1,h,'LabelSpacing',100,'fontsize',10)  
+            clabel(c1,h,'LabelSpacing',100,'fontsize',10)
         end
         if strcmp(z_str,'-dens')
             title([var_str{var},' phase ann ',' z\_level: ',sprintf('%4.2f',z_levels(z_lvl))])
         else
             title([var_str{var},' phase ann ',' z\_level: ',sprintf('%04d',z_levels(z_lvl))])
         end
-        
+
         amplitude_sann = abs(sann);
         subplot 212
         pcolor(xi,yi,amplitude_sann'), shading interp, caxis([-1,1]*0.1), colorbar, continents, hold on
@@ -669,15 +690,15 @@ end
         else
             contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int1,'-k');
             [c1,h] = contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int2,'-k','linewidth', 2);
-            clabel(c1,h,'LabelSpacing',100,'fontsize',10)  
+            clabel(c1,h,'LabelSpacing',100,'fontsize',10)
         end
         title([var_str{var},' amplitude ann'])
         if strcmp(z_str,'-dens')
-            saveas(gcf,[outfile_path,'errors/',var_str{var},'-sann9-10',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,'errors/',var_str{var},'-sann9-10',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
         else
-            saveas(gcf,[outfile_path,'errors/',var_str{var},'-sann9-10',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,'errors/',var_str{var},'-sann9-10',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
         end
-        
+
         % Climate change component - so 19 with xcc 20 and ycc 21
         close all, handle = figure('Position',[100 100 800 800],'visible','off'); set(0,'CurrentFigure',handle), clmap(27)
         pcolor(xi,yi,(c(:,:,z_lvl,19)*time_rangen)');
@@ -689,9 +710,9 @@ end
         else
             contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int1,'-k');
             [c1,h] = contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int2,'-k','linewidth', 2);
-            clabel(c1,h,'LabelSpacing',100,'fontsize',10)  
+            clabel(c1,h,'LabelSpacing',100,'fontsize',10)
         end
-        
+
         %% Check for density analysis, match surface data and overplot density outcrop changes
         if strcmp(z_str,'-dens') && strcmp(var_str(var),'s')
             hold all
@@ -708,10 +729,10 @@ end
             plot(10,48,'o','markerfacecolor','k','markeredgecolor','k','markersize',8)
             text(15,48,'Isopycnal migration salinity change','Fontsize',8)
         end
-        
+
         %% Now interrogate axis_pair for contouring levels
         optim_step = (change_axis*2)/10; % Changed from 5
-        [diff,step_index] = min(abs(range_interval-optim_step));
+        [~,step_index] = min(abs(range_interval-optim_step));
         cont_int = -change_axis:range_interval(step_index):change_axis;
         %cont_int(cont_int==0) = []; cont_int(find(cont_int < 0.00001 & cont_int > -0.00001)) = []; % Fix for type errors
         cont_int_labels = -change_axis:(range_interval(step_index)/2):change_axis;
@@ -724,15 +745,15 @@ end
         set(hh,'Position',[0.92 0.075 0.03 0.875]); clear hh
         set(gca,'Position',[0.075 0.075 0.82 0.875]);
         clear cont_int* range_l* range_h*
-        
+
         if strcmp(z_str,'-dens')
             %title([var_str{var},'trend-19',time_range,' z\_level: ',sprintf('%4.2f',z_levels(z_lvl))])
-            saveas(gcf,[outfile_path,var_str{var},'trend-19',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,var_str{var},'trend-19',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
         else
             %title([var_str{var},'trend-19',time_range,' z\_level: ',sprintf('%04d',z_levels(z_lvl))])
-            saveas(gcf,[outfile_path,var_str{var},'trend-19',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,var_str{var},'trend-19',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
         end
-        
+
         % Climate change error component - so 19 with xcc 20 and ycc 21
         close all, handle = figure('Position',[100 100 800 800],'visible','off'); set(0,'CurrentFigure',handle), clmap(27)
         pcolor(xi,yi,(ce(:,:,z_lvl,19)*3.09)');
@@ -744,12 +765,12 @@ end
         else
             contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int1,'-k');
             [c1,h] = contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int2,'-k','linewidth', 2);
-            clabel(c1,h,'LabelSpacing',100,'fontsize',10)  
+            clabel(c1,h,'LabelSpacing',100,'fontsize',10)
         end
-        
+
         % Now interrogate axis_pair for contouring levels
         optim_step = change_axis/10; % Changed from 5
-        [diff,step_index] = min(abs(range_interval-optim_step));
+        [~,step_index] = min(abs(range_interval-optim_step));
         cont_int = 0:range_interval(step_index):change_axis;
         %cont_int(cont_int==0) = []; cont_int(find(cont_int < 0.00001 & cont_int > -0.00001)) = []; % Fix for type errors
         cont_int_labels = 0:(range_interval(step_index)/2):change_axis;
@@ -760,15 +781,15 @@ end
         hh = colorbarf_nw('vert',cont_int_labels,cont_int);
         set(hh,'Position',[0.92 0.075 0.03 0.875]);
         set(gca,'Position',[0.075 0.075 0.82 0.875]);
-        
+
         if strcmp(z_str,'-dens')
             %title([var_str{var},'trenderror-19',time_range,' z\_level: ',sprintf('%4.2fd',z_levels(z_lvl))])
-            saveas(gcf,[outfile_path,'errors/',var_str{var},'trenderror-19',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,'errors/',var_str{var},'trenderror-19',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
         else
             %title([var_str{var},'trenderror-19',time_range,' z\_level: ',sprintf('%04d',z_levels(z_lvl))])
-            saveas(gcf,[outfile_path,'errors/',var_str{var},'trenderror-19',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,'errors/',var_str{var},'trenderror-19',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
         end
-        
+
         % SOI component
         soi = squeeze(c(:,:,z_lvl,22));
         soi = -soi; % Change sign
@@ -781,14 +802,14 @@ end
         else
             contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int1,'-k');
             [c1,h] = contour(xi,yi,(mean(:,:,z_lvl)+squeeze(c(:,:,z_lvl,1)))',contour_int2,'-k','linewidth', 2);
-            clabel(c1,h,'LabelSpacing',100,'fontsize',10)  
+            clabel(c1,h,'LabelSpacing',100,'fontsize',10)
         end
-        strminmax = minmax(minmax(soi));
-        strmedian = nanmedian(nanmedian(soi));
-        
+        %strminmax = minmax(minmax(soi));
+        %strmedian = nanmedian(nanmedian(soi));
+
         % Now interrogate axis_pair for contouring levels
         optim_step = ((change_axis*2)*0.5)/10; % Changed from 5
-        [diff,step_index] = min(abs(range_interval-optim_step));
+        [~,step_index] = min(abs(range_interval-optim_step));
         cont_int = -change_axis*0.5:range_interval(step_index):change_axis*0.5;
         %cont_int(cont_int==0) = []; cont_int(find(cont_int < 0.00001 & cont_int > -0.00001)) = []; % Fix for type errors
         cont_int_labels = -(change_axis*0.5):(range_interval(step_index)/2):(change_axis*0.5);
@@ -799,15 +820,15 @@ end
         hh = colorbarf_nw('vert',cont_int_labels,cont_int);
         set(hh,'Position',[0.92 0.075 0.03 0.875]);
         set(gca,'Position',[0.075 0.075 0.82 0.875]);
-        
+
         if strcmp(z_str,'-dens')
             title([var_str{var},'-22 soi z\_level: ',sprintf('%4.2f',z_levels(z_lvl))])
-            saveas(gcf,[outfile_path,var_str{var},'-22-soi',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,var_str{var},'-22-soi',z_str,sprintf('%4.2f',z_levels(z_lvl)),'.png']);
         else
             title([var_str{var},'-22 soi z\_level: ',sprintf('%04d',z_levels(z_lvl))])
-            saveas(gcf,[outfile_path,var_str{var},'-22-soi',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
+            saveas(gcf,[outFilePath,var_str{var},'-22-soi',z_str,sprintf('%04d',z_levels(z_lvl)),'.png']);
         end
-        
+
         close all
     end % for lvl =
 end % for var =

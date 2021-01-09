@@ -253,25 +253,25 @@ for var = 1:length(var_str)
             ax1 = subplot('Position',[0.1 0.53 0.775 0.4]);
             cmd = strcat('pcolor(yi,ocean_levels(1:45),chg',str(basin),'(:,1:45)'')'); cmd = char(cmd); eval(cmd);
             shading interp, caxis([-1,1]*var_plot_scale(var)), set(gca,'YDir','reverse','Tickdir','out','XTickLabel',[]), hold on
-            
+
             % Now interrogate matrix for contouring levels
             cmd = strcat('testmat = smooth(chg',str(basin),'(:,1:45));'); cmd = char(cmd); eval(cmd);
             range_test = range(testmat);
-            range_interval = [-0.5 -0.25 -0.2 -0.1 -0.05 0.05 0.1 0.2 0.25 0.5]; 
+            range_interval = [-0.5 -0.25 -0.2 -0.1 -0.05 0.05 0.1 0.2 0.25 0.5];
             [diff,range_low_ind] = min(range_interval-range_test(1)); range_low = range_interval(range_low_ind);
             [diff,range_high_ind] = min(abs(range_interval-range_test(2))); range_high = range_interval(range_high_ind);
             optim_step = (range_high-range_low)/5;
             [diff,step_index] = min(abs(range_interval-optim_step));
             cont_int = range_low:range_interval(step_index):range_high;
             cont_int(cont_int==0) = []; cont_int(cont_int < 0.00001 & cont_int > -0.00001) = []; % Fix for type errors
-            
+
             contour_int1 = str2num(var_range{var});
             contour_int2 = str2num(var_contours{var});
             for x = 1:length(contour_int2)
                 duplicate = find(contour_int1 == contour_int2(x));
                 if ~isempty(duplicate), contour_int1(duplicate) = []; end
             end
-            
+
             %title([str{basin},varname_str{var},' change on pressure-surfaces ',time_window])
             cmd = strcat('contour(yi,ocean_levels(1:45),var_mean',str(basin),'(:,1:45)'',contour_int1,''-k'');'); cmd = char(cmd); eval(cmd);
             cmd = strcat('[c,h] = contour(yi,ocean_levels(1:45),var_mean',str(basin),'(:,1:45)'',contour_int2,''k'',''lineWidth'',2);'); cmd = char(cmd); eval(cmd)
@@ -280,7 +280,7 @@ for var = 1:length(var_str)
             text_handle = clabel(c,h);
             set(text_handle,'BackgroundColor',[1 1 1],'Edgecolor',[.5 .5 .5],'fontsize',6)
             set(ax1,'ylim',[0 500],'ytick',[0:100:400],'yminort','on','xminort','on')
-            
+
             % Generate second lower plot
             ax2 = subplot('Position',[0.1 0.1 0.775 0.43]);
             cmd = strcat('pcolor(yi,ocean_levels(45:66),chg',str(basin),'(:,45:66)'')'); cmd = char(cmd); eval(cmd);
@@ -288,7 +288,7 @@ for var = 1:length(var_str)
             cmd = strcat('contour(yi,ocean_levels(45:66),var_mean',str(basin),'(:,45:66)'',contour_int1,''-k'');'); cmd = char(cmd); eval(cmd);
             cmd = strcat('[c,h] = contour(yi,ocean_levels(45:66),var_mean',str(basin),'(:,45:66)'',contour_int2,''k'',''lineWidth'',2);'); cmd = char(cmd); eval(cmd)
             set(h,'ShowText','on'); clear c h
-            
+
             % Overplot contours and text markers on the coloured fields
             cmd = strcat('[c,h] = contour(yi,ocean_levels(45:66),chg',str(basin),'(:,45:66)'',cont_int,''color'',[.5 .5 .5]); hold on'); cmd = char(cmd); eval(cmd);
             text_handle = clabel(c,h);
@@ -316,14 +316,14 @@ if strcmp(var_str(var),'s') && strcmp(str(basin),'Atlantic') && paperplots; % On
         eval(['!del /F ',home_dir,outdir,'fig7adg.mat']);
     else % Assume Linux
         eval(['!rm -f ',home_dir,outdir,'fig6a.mat']);
-        eval(['!rm -f ',home_dir,outdir,'fig7adg.mat']);        
+        eval(['!rm -f ',home_dir,outdir,'fig7adg.mat']);
     end
     save([home_dir,outdir,'fig6a.mat'], 'xi', 'yi', 'ocean_levels', 'chgGlobal', 'chgerrGlobal', 'var_plot_scale', 'var', 'var_meanGlobal', 'file_name', 'file_creation_time', 'script_name');
-    save([home_dir,outdir,'fig7adg.mat'], 'xi', 'yi', 'ocean_levels', 'var_plot_scale', 'file_name', 'file_creation_time', 'script_name', ... 
+    save([home_dir,outdir,'fig7adg.mat'], 'xi', 'yi', 'ocean_levels', 'var_plot_scale', 'file_name', 'file_creation_time', 'script_name', ...
      'chgPacific', 'chgerrPacific', 'chgIndian', 'chgerrIndian', 'chgAtlantic',  'chgerrAtlantic', ...
      'var_meanPacific', 'var_meanIndian', 'var_meanAtlantic');
 end
-            
+
             filename = strcat(full_path,'basin_profiles/',var_str(var),'-change_',str(basin),'_',time_window,'.png'); filename = char(filename);
             saveas(gca,filename);
 
@@ -331,11 +331,11 @@ end
 %% Do climate change error plots -  Multiplying the chgerr matrix by 3.09, brings error into the 99.9% confidence range
             close all, handle = figure('Position',[100 100 800 800],'visible','off'); set(0,'CurrentFigure',handle), clmap(27)
 
-            % Generate first upper plot and set contouring intervals            
+            % Generate first upper plot and set contouring intervals
             ax1 = subplot('Position',[0.1 0.53 0.775 0.4]);
             cmd = strcat('pcolor(yi,ocean_levels(1:45),chgerr',str(basin),'(:,1:45)''.*3.09)'); cmd = char(cmd); eval(cmd);
             shading interp, caxis([0,1]*(var_plot_scale(var)/2)), set(gca,'YDir','reverse','Tickdir','out','XTickLabel',[]), hold on
-            
+
             cont_int = 0:0.025:0.5; cont_int(cont_int==0) = [];
             title([str{basin},varname_str{var},' change error (99.9% CI) on pressure-surfaces ',time_window])
             cmd = strcat('contour(yi,ocean_levels(1:45),var_mean',str(basin),'(:,1:45)'',contour_int1,''-k'');'); cmd = char(cmd); eval(cmd);
@@ -343,9 +343,9 @@ end
             set(h,'ShowText','on'); clear c h
             cmd = strcat('[c,h] = contour(yi,ocean_levels(1:45),chgerr',str(basin),'(:,1:45)'',cont_int,''color'',[.5 .5 .5]); hold on'); cmd = char(cmd); eval(cmd);
             text_handle = clabel(c,h);
-            set(text_handle,'BackgroundColor',[1 1 1],'Edgecolor',[.5 .5 .5],'fontsize',6)            
+            set(text_handle,'BackgroundColor',[1 1 1],'Edgecolor',[.5 .5 .5],'fontsize',6)
             set(ax1,'ylim',[0 500],'ytick',0:100:400,'yminort','on','xminort','on')
-            
+
             % Generate second lower plot
             ax2 = subplot('Position',[0.1 0.1 0.775 0.43]);
             cmd = strcat('pcolor(yi,ocean_levels(45:66),chgerr',str(basin),'(:,45:66)''.*3.09)'); cmd = char(cmd); eval(cmd);
@@ -353,7 +353,7 @@ end
             cmd = strcat('contour(yi,ocean_levels(45:66),var_mean',str(basin),'(:,45:66)'',contour_int1,''-k'');'); cmd = char(cmd); eval(cmd);
             cmd = strcat('[c,h] = contour(yi,ocean_levels(45:66),var_mean',str(basin),'(:,45:66)'',contour_int2,''k'',''lineWidth'',2);'); cmd = char(cmd); eval(cmd)
             set(h,'ShowText','on'); clear c h
-            
+
             % Overplot contours and text markers on the coloured fields
             cmd = strcat('[c,h] = contour(yi,ocean_levels(45:66),chgerr',str(basin),'(:,45:66)'',cont_int,''color'',[.5 .5 .5]); hold on'); cmd = char(cmd); eval(cmd);
             text_handle = clabel(c,h);
@@ -375,23 +375,23 @@ end
 %% Start plotting for top 2000db using 0-300 and 300-2000
             % Split level plotting for the top 2000db
             close all, handle_split = figure('Position',[50 50 800 800],'visible','off'); set(0,'CurrentFigure',handle_split), clmap(27)
-            
+
             % Generate first upper plot and set contouring intervals
             ax1 = subplot('Position',[0.1 0.53 0.775 0.4]);
             cmd = strcat('pcolor(yi,ocean_levels(1:37),chg',str(basin),'(:,1:37)'')'); cmd = char(cmd); eval(cmd);
             shading interp, caxis([-1,1]*var_plot_scale(var)), set(gca,'YDir','reverse','Tickdir','out','XTickLabel',[]), hold on
-            
+
             % Now interrogate matrix for contouring levels
             cmd = strcat('testmat = smooth(chg',str(basin),'(:,1:45));'); cmd = char(cmd); eval(cmd);
             range_test = range(testmat);
-            range_interval = [-0.5 -0.25 -0.2 -0.1 -0.05 0.05 0.1 0.2 0.25 0.5]; 
+            range_interval = [-0.5 -0.25 -0.2 -0.1 -0.05 0.05 0.1 0.2 0.25 0.5];
             [diff,range_low_ind] = min(range_interval-range_test(1)); range_low = range_interval(range_low_ind);
             [diff,range_high_ind] = min(abs(range_interval-range_test(2))); range_high = range_interval(range_high_ind);
             optim_step = (range_high-range_low)/5;
             [diff,step_index] = min(abs(range_interval-optim_step));
             cont_int = range_low:range_interval(step_index):range_high;
             cont_int(cont_int==0) = []; cont_int(find(cont_int < 0.00001 & cont_int > -0.00001)) = []; % Fix for type errors
-            
+
             title([str{basin},varname_str{var},' change on pressure-surfaces ',time_window])
             cmd = strcat('contour(yi,ocean_levels(1:37),var_mean',str(basin),'(:,1:37)'',contour_int1,''-k'');'); cmd = char(cmd); eval(cmd);
             cmd = strcat('[c,h] = contour(yi,ocean_levels(1:37),var_mean',str(basin),'(:,1:37)'',contour_int2,''k'',''lineWidth'',2);'); cmd = char(cmd); eval(cmd)
@@ -400,7 +400,7 @@ end
             text_handle = clabel(c,h);
             set(text_handle,'BackgroundColor',[1 1 1],'Edgecolor',[.5 .5 .5],'fontsize',6)
             set(ax1,'ylim',[0 300],'ytick',[0:50:250],'yminort','on','xminort','on')
-            
+
             % Generate second lower plot
             ax2 = subplot('Position',[0.1 0.1 0.775 0.43]);
             cmd = strcat('pcolor(yi,ocean_levels(37:66),chg',str(basin),'(:,37:66)'')'); cmd = char(cmd); eval(cmd);
@@ -408,13 +408,13 @@ end
             cmd = strcat('contour(yi,ocean_levels(37:66),var_mean',str(basin),'(:,37:66)'',contour_int1,''-k'');'); cmd = char(cmd); eval(cmd);
             cmd = strcat('[c,h] = contour(yi,ocean_levels(37:66),var_mean',str(basin),'(:,37:66)'',contour_int2,''k'',''lineWidth'',2);'); cmd = char(cmd); eval(cmd)
             set(h,'ShowText','on'); clear c h
-            
+
             % Overplot contours and text markers on the coloured fields
             cmd = strcat('[c,h] = contour(yi,ocean_levels(37:66),chg',str(basin),'(:,37:66)'',cont_int,''color'',[.5 .5 .5]); hold on'); cmd = char(cmd); eval(cmd);
             text_handle = clabel(c,h);
             set(text_handle,'BackgroundColor',[1 1 1],'Edgecolor',[.5 .5 .5],'fontsize',6)
             set(ax2,'ylim',[300 2000],'ytick',300:200:2000,'yminort','on','xminort','on')
-            
+
             % Generate colorbar, resize plots and save file
             hh = colorbarf_nw('vert',(-1:0.1:1)*var_plot_scale(var),(-1:0.2:1)*var_plot_scale(var));
             set(hh,'Position',[0.92 0.075 0.03 0.875]);
@@ -428,12 +428,12 @@ end
 
 %% Do climate change error plots -  Multiplying the chgerr matrix by 3.09, brings error into the 99.9% confidence range
             close all, handle = figure('Position',[100 100 800 800],'visible','off'); set(0,'CurrentFigure',handle), clmap(27)
-            
+
             % Generate first upper plot and set contouring intervals
             ax1 = subplot('Position',[0.1 0.53 0.775 0.4]);
             cmd = strcat('pcolor(yi,ocean_levels(1:37),chgerr',str(basin),'(:,1:37)''.*3.09)'); cmd = char(cmd); eval(cmd);
             shading interp, caxis([0,1]*(var_plot_scale(var)/2)), set(gca,'YDir','reverse','Tickdir','out','XTickLabel',[]), hold on
-            
+
             cont_int = 0:0.025:0.5; cont_int(cont_int==0) = [];
             title([str{basin},varname_str{var},' change error (99.9% CI) on pressure-surfaces ',time_window])
             cmd = strcat('contour(yi,ocean_levels(1:45),var_mean',str(basin),'(:,1:45)'',contour_int1,''-k'');'); cmd = char(cmd); eval(cmd);
@@ -451,13 +451,13 @@ end
             cmd = strcat('contour(yi,ocean_levels(37:66),var_mean',str(basin),'(:,37:66)'',contour_int1,''-k'');'); cmd = char(cmd); eval(cmd);
             cmd = strcat('[c,h] = contour(yi,ocean_levels(37:66),var_mean',str(basin),'(:,37:66)'',contour_int2,''k'',''lineWidth'',2);'); cmd = char(cmd); eval(cmd)
             set(h,'ShowText','on'); clear c h
-            
+
             % Overplot contours and text markers on the coloured fields
             cmd = strcat('[c,h] = contour(yi,ocean_levels(37:66),chgerr',str(basin),'(:,37:66)'',cont_int,''color'',[.5 .5 .5]); hold on'); cmd = char(cmd); eval(cmd);
             text_handle = clabel(c,h);
             set(text_handle,'BackgroundColor',[1 1 1],'Edgecolor',[.5 .5 .5],'fontsize',6)
             set(ax2,'ylim',[300 2000],'ytick',300:200:2000,'yminort','on','xminort','on')
-            
+
             % Generate colorbar, resize plots and save file
             hh = colorbarf_nw('vert',(0:0.05:1)*(var_plot_scale(var)/2),(0:0.1:1)*(var_plot_scale(var)/2));
             set(hh,'Position',[0.92 0.075 0.03 0.875]);
@@ -468,7 +468,7 @@ end
             ax3 = axes('Position',[0.075 .522 .82 .007],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[.99 .99 .99],'ycolor',[.99 .99 .99]);
             filename = strcat(full_path,'basin_profiles/errors/',var_str(var),'-change-error_300db_',str(basin),'_',time_window,'_top2000db.png'); filename = char(filename);
             saveas(gca,filename);
-            
+
         end % for basin = 1..
     end % if strcmp(z_level,'pressure')
 end % for var

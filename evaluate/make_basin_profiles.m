@@ -1,3 +1,9 @@
+function make_basin_profiles(infile,dateTime)
+% Generates diagnostic plots visualizing a selected analysis
+%
+% inputs:   infile - input mat file following standard analysis output format
+%           dateTime - time format for use in outDir generation
+
 % Create basin and global profile plots mean field overlay
 % Paul J. Durack 1 August 2007
 
@@ -76,49 +82,66 @@
 % PJD  1 Jul 2009   - Updated output dir logic (error subdir was not being created)
 % PJD 27 Nov 2009   - Updated to export error estimates for plotting signal significance
 %}
-% PJD 15 Sep 2020   - Copied from /work/durack1/Shared/090605_FLR2_sptg/make_basin_profiles.m (120324)
+% PJD 15 Sep 2020   - Copied from /work/durack1/Shared/090605_FLR2_sptg/make_basin_profiles.m (091126)
 %                     and updated input
+% PJD  9 Jan 2021   - Updated as function call
 
-a_multithread_num = 2; % Set number of target threads
-maxNumCompThreads(a_multithread_num); % Enable multi-threading V7.5+
+%% Cleanup workspace and command window
+% Initialise environment variables - only homeDir needed for file cleanups
+%[homeDir,work_dir,data_dir,obsDir,username,a_host_longname,a_maxThreads,a_opengl,a_matver] = myMatEnv(maxThreads);
+[~,~,~,~,username,~,~,~,~] = myMatEnv(2);
+%archiveDir = [homeDir,'090605_FLR2_sptg/'];
+if ~sum(strcmp(username,{'dur041','duro','durack1'})); disp('**myMatEnv - username error**'); keyboard; end
+paperplots = 0; % Turn off data generation for paperplots
 
-%% Clear workspace, set home_dir, outfile_path and infile
-clear, close all
-if isunix
-    home_dir = '/home/dur041/Shared/';
-    [status,a_host_longname] = unix('hostname');
-elseif strcmp(computer,'PCWIN64')
-    home_dir = 'E:\Research\d14qq1s-hf\Shared\'; % Set home directory
-    [status,a_host_longname] = dos('hostname');
-elseif strcmp
-    home_dir = 'C:\Sync\Shared\'; % Set home directory
-    [status,a_host_longname] = dos('hostname');
-else
-    home_dir = 'C:\Sync\Shared\'; % Set home directory
-    [status,a_host_longname] = dos('hostname');
+%% Change the infile and pathnames
+% Create inputs if they are not passed as arguments - check usage below..
+if nargin < 1, disp('No valid arguments, exiting'); end
+if nargin > 2, disp('Too many arguments, exiting'); end
+if nargin == 2
+   % Validate input is matfile
+   if isfile(infile)
+       fclose('all');
+       [fid,~] = fopen(infile);
+       S = convertCharsToStrings(fread(fid,80,'uint8=>char')); % read 80 elements, captures all version and date info
+       ind = strfind(S,',');
+       fclose(fid); clear fid
+       matver = extractBefore(S,ind(1)); clear ind
+       disp(matver)
+       if contains(matver,'MAT-file')
+           [filePath,name,~] = fileparts(infile);
+           fileNameBits = split(name,'_'); % cell array
+           outPath = char(fullfile(filePath,join(fileNameBits([1,2,5,7:end]),'_')));
+           disp(outPath)
+       else
+           disp('No valid MAT-file, exiting')
+           quit
+       end % contains(matver
+   end % isfile(infile)
+   % Validate dateTime
+
+end % nargin == 2
+
+%% Cleanup existing files
+outDir = 'basinProfiles/'; % Set outfile subdir
+%dateTime = [datestr(now,'YYMMDD'),'-',datestr(now,'HHMM')];
+outPath = [outPath,'-',dateTime];
+outFilePath = fullfile(outPath,outDir); % Set full outfile path
+disp(['outFilePath:',outFilePath])
+outFilePathErrors = fullfile(outFilePath,'errors/'); % Errors subpath
+if ~isfolder(outFilePath) % Check outFilePath exists
+    mkdir(outFilePath)
 end
-paperplots = 1;
-sht_path = '090605_FLR2_sptg/';
-infile = '090605_190300_local_robust_1950_FLRdouble_sptg_79pres1000_v7';
-full_path = [home_dir,sht_path]; % Set full path
-outfile_dir = 'basin_profiles/'; % Set outfile subdir
-outfile_path = [full_path,outfile_dir]; % Set full outfile path
-if ~isfolder(outfile_path) % Check outfile_path exists
-    mkdir(full_path,outfile_dir)
-elseif ~isfolder([outfile_path,'errors/'])
-        mkdir([full_path,outfile_dir,'errors/'])
-else % Purge current *.png files
-    if strcmp(computer,'PCWIN') || strcmp(computer,'PCWIN64')
-        eval(['!del /F ',[regexprep(full_path,'/','\'),regexprep(outfile_dir,'/','\')],'*.png'])
-        eval(['!del /F ',[regexprep(full_path,'/','\'),regexprep(outfile_dir,'/','\'),'errors\'],'*.png']);
-    else % Assume Linux
-        eval(['!rm -f ',[full_path,outfile_dir],'*.png']);
-        eval(['!rm -f ',[full_path,outfile_dir,'errors/'],'*.png']);
-    end
+if ~isfolder(outFilePathErrors)
+        mkdir(outFilePathErrors)
 end
+% Purge existing *.png files
+% Assume Linux
+eval(['!rm -f ',outFilePath,'*.png']);
+eval(['!rm -f ',outFilePathErrors,'*.png']);
 
 %% Now load input data
-load([full_path,infile])
+load(infile)
 
 %% Generically smooth inputs for plotting - As this is a basin average integration, there is no need for pre-smoothing
 %{
@@ -175,8 +198,8 @@ end
 %% Preallocate memory to variables
 lvls = 1:size(smean,3);
 [chgGlobal,chgPacific,chgIndian,chgAtlantic,chgerrGlobal,chgerrPacific,chgerrIndian,chgerrAtlantic, ...
-    sGlobal,sPacific,sIndian,sAtlantic,pGlobal,pPacific,pIndian,pAtlantic, ...
     var_meanGlobal,var_meanPacific,var_meanIndian,var_meanAtlantic] = deal( ones(length(yi),length(lvls)) );
+%    sGlobal,sPacific,sIndian,sAtlantic,pGlobal,pPacific,pIndian,pAtlantic, ... % Removed from middle above
 
 %% Create variable specific names and scaling factors
 if strcmp(z_level, 'pressure')
@@ -196,8 +219,11 @@ else
     var_error_scale = [15,1,0.2];
 end
 % Variable independent
-numobs = 1000;
+%numobs = 1000;
 time_window = '2000-1950';
+if contains(infile,'201223_152459_')
+    time_window = '2020-1950';
+end
 
 for var = 1:length(var_str)
     for ilvl = 1:length(lvls)
@@ -258,10 +284,10 @@ for var = 1:length(var_str)
             cmd = strcat('testmat = smooth(chg',str(basin),'(:,1:45));'); cmd = char(cmd); eval(cmd);
             range_test = range(testmat);
             range_interval = [-0.5 -0.25 -0.2 -0.1 -0.05 0.05 0.1 0.2 0.25 0.5];
-            [diff,range_low_ind] = min(range_interval-range_test(1)); range_low = range_interval(range_low_ind);
-            [diff,range_high_ind] = min(abs(range_interval-range_test(2))); range_high = range_interval(range_high_ind);
+            [~,range_low_ind] = min(range_interval-range_test(1)); range_low = range_interval(range_low_ind);
+            [~,range_high_ind] = min(abs(range_interval-range_test(2))); range_high = range_interval(range_high_ind);
             optim_step = (range_high-range_low)/5;
-            [diff,step_index] = min(abs(range_interval-optim_step));
+            [~,step_index] = min(abs(range_interval-optim_step));
             cont_int = range_low:range_interval(step_index):range_high;
             cont_int(cont_int==0) = []; cont_int(cont_int < 0.00001 & cont_int > -0.00001) = []; % Fix for type errors
 
@@ -305,7 +331,7 @@ for var = 1:length(var_str)
             ax3 = axes('Position',[0.075 .522 .82 .007],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[.99 .99 .99],'ycolor',[.99 .99 .99]);
 
 % Save variables out for final paper plotting - Need to include outcrop code
-if strcmp(var_str(var),'s') && strcmp(str(basin),'Atlantic') && paperplots; % Only save for first loop iteration for density data
+if strcmp(var_str(var),'s') && strcmp(str(basin),'Atlantic') && paperplots % Only save for first loop iteration for density data
     file_name = [full_path,infile];
     script_name = [mfilename('fullpath'),'.m'];
     file_creation_time = [datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)];
@@ -323,10 +349,8 @@ if strcmp(var_str(var),'s') && strcmp(str(basin),'Atlantic') && paperplots; % On
      'chgPacific', 'chgerrPacific', 'chgIndian', 'chgerrIndian', 'chgAtlantic',  'chgerrAtlantic', ...
      'var_meanPacific', 'var_meanIndian', 'var_meanAtlantic');
 end
-
-            filename = strcat(full_path,'basin_profiles/',var_str(var),'-change_',str(basin),'_',time_window,'.png'); filename = char(filename);
+            filename = strcat(outFilePath,var_str(var),'-change_',str(basin),'_',time_window,'.png'); filename = char(filename);
             saveas(gca,filename);
-
 
 %% Do climate change error plots -  Multiplying the chgerr matrix by 3.09, brings error into the 99.9% confidence range
             close all, handle = figure('Position',[100 100 800 800],'visible','off'); set(0,'CurrentFigure',handle), clmap(27)
@@ -368,7 +392,7 @@ end
             ycall = ylabel('Pressure (db)'); set(ycall,'Position',[-78.9 500 1])
             xlabel('Latitude')
             ax3 = axes('Position',[0.075 .522 .82 .007],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[.99 .99 .99],'ycolor',[.99 .99 .99]);
-            filename = strcat(full_path,'basin_profiles/errors/',var_str(var),'-change-error_',str(basin),'_',time_window,'_top2000db.png'); filename = char(filename);
+            filename = strcat(outFilePathErrors,var_str(var),'-change-error_',str(basin),'_',time_window,'_top2000db.png'); filename = char(filename);
             saveas(gca,filename);
 
 
@@ -385,10 +409,10 @@ end
             cmd = strcat('testmat = smooth(chg',str(basin),'(:,1:45));'); cmd = char(cmd); eval(cmd);
             range_test = range(testmat);
             range_interval = [-0.5 -0.25 -0.2 -0.1 -0.05 0.05 0.1 0.2 0.25 0.5];
-            [diff,range_low_ind] = min(range_interval-range_test(1)); range_low = range_interval(range_low_ind);
-            [diff,range_high_ind] = min(abs(range_interval-range_test(2))); range_high = range_interval(range_high_ind);
+            [~,range_low_ind] = min(range_interval-range_test(1)); range_low = range_interval(range_low_ind);
+            [~,range_high_ind] = min(abs(range_interval-range_test(2))); range_high = range_interval(range_high_ind);
             optim_step = (range_high-range_low)/5;
-            [diff,step_index] = min(abs(range_interval-optim_step));
+            [~,step_index] = min(abs(range_interval-optim_step));
             cont_int = range_low:range_interval(step_index):range_high;
             cont_int(cont_int==0) = []; cont_int(find(cont_int < 0.00001 & cont_int > -0.00001)) = []; % Fix for type errors
 
@@ -423,7 +447,7 @@ end
             ycall = ylabel('Pressure (db)'); set(ycall,'Position',[-78.9 500 1])
             xlabel('Latitude')
             ax3 = axes('Position',[0.075 .522 .82 .007],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[.99 .99 .99],'ycolor',[.99 .99 .99]);
-            filename = strcat(full_path,'basin_profiles/',var_str(var),'-change_300db_',str(basin),'_',time_window,'.png'); filename = char(filename);
+            filename = strcat(outFilePath,var_str(var),'-change_300db_',str(basin),'_',time_window,'.png'); filename = char(filename);
             saveas(gca,filename);
 
 %% Do climate change error plots -  Multiplying the chgerr matrix by 3.09, brings error into the 99.9% confidence range
@@ -466,7 +490,7 @@ end
             ycall = ylabel('Pressure (db)'); set(ycall,'Position',[-78.9 500 1])
             xlabel('Latitude')
             ax3 = axes('Position',[0.075 .522 .82 .007],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[.99 .99 .99],'ycolor',[.99 .99 .99]);
-            filename = strcat(full_path,'basin_profiles/errors/',var_str(var),'-change-error_300db_',str(basin),'_',time_window,'_top2000db.png'); filename = char(filename);
+            filename = strcat(outFilePathErrors,var_str(var),'-change-error_300db_',str(basin),'_',time_window,'_top2000db.png'); filename = char(filename);
             saveas(gca,filename);
 
         end % for basin = 1..

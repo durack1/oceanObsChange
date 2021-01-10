@@ -125,13 +125,13 @@ function make_levels(infile)
 %                     recreate the surfaceDs fields for the gamrf files
 % PJD 15 Jun 2009   - Added paperplots variable
 %}
-% PJD 15 Sep 2020   - Copied from /wor/work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/090605_FLR2_sptg/make_levels.m (090615)
+% PJD 15 Sep 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/090605_FLR2_sptg/make_levels.m (090615)
 %                     and updated input
 % PJD  6 Jan 2021   - Update to convert to function, infile as argument
 % PJD  6 Jan 2021   - Update to use myMatEnv (maxNumCompThreads)
 % PJD  7 Jan 2021   - Update to validate infile and extract parts
 % PJD  9 Jan 2021   - Updated logic about existing directories - don't assume they exist
-% PJD  9 Jan 2021   - Update to use dateTime in outDir
+% PJD  9 Jan 2021   - Update to use dateTime in outDir - updated format
 
 %% Cleanup workspace and command window
 % Initialise environment variables - only homeDir needed for file cleanups
@@ -169,7 +169,7 @@ end % nargin == 1
 
 %% Cleanup existing files
 outDir = 'levels/'; % Set outfile subdir
-dateTime = [datestr(now,'YYMMDD'),'-',datestr(now,'HHMM')];
+dateTime = [datestr(now,'yymmdd'),'-',datestr(now,'HHMM')];
 outPath = [outPath,'-',dateTime];
 outFilePath = fullfile(outPath,outDir); % Set full outfile path
 disp(['outFilePath:',outFilePath])
@@ -840,4 +840,9 @@ end
         close all
     end % for lvl =
 end % for var =
+
+% Call make_basin_profiles with args
+make_basin_profiles(infile,dateTime)
+
 clear
+exit

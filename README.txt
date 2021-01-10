@@ -1,3 +1,9 @@
+Sat 09 Jan 2021 09:21:48 PM PST
+
+Run in batch mode, script with argument(s)
+(base) bash-4.2$ ~/apps/MATLAB/R2020b/bin/matlab -batch "make_levels('/work/durack1/Shared/200428_data_OceanObsAnalysis/200913_210216_local_robust_1950_FLRdouble_sptg_200913_79pres1000.mat');"
+
+
 Wed 23 Dec 2020 03:12:05 PM PST
 
 (base) bash-4.2$ date

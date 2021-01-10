@@ -130,6 +130,8 @@ function make_levels(infile)
 % PJD  6 Jan 2021   - Update to convert to function, infile as argument
 % PJD  6 Jan 2021   - Update to use myMatEnv (maxNumCompThreads)
 % PJD  7 Jan 2021   - Update to validate infile and extract parts
+% PJD  9 Jan 2021   - Updated logic about existing directories - don't assume they exist
+% PJD  9 Jan 2021   - Update to use dateTime in outDir
 
 %% Cleanup workspace and command window
 % Initialise environment variables - only homeDir needed for file cleanups
@@ -167,18 +169,21 @@ end % nargin == 1
 
 %% Cleanup existing files
 outDir = 'levels/'; % Set outfile subdir
+dateTime = [datestr(now,'YYMMDD'),'-',datestr(now,'HHMM')];
+outPath = [outPath,'-',dateTime];
 outFilePath = fullfile(outPath,outDir); % Set full outfile path
+disp(['outFilePath:',outFilePath])
 outFilePathErrors = fullfile(outFilePath,'errors/'); % Errors subpath
 if ~isfolder(outFilePath) % Check outFilePath exists
     mkdir(outFilePath)
-    if ~isfolder(outFilePathErrors)
-        mkdir(outFilePathErrors)
-    end
-else % Purge current *.png files
-    % Assume Linux
-    eval(['!rm -f ',outFilePath,'*.png']);
-    eval(['!rm -f ',outFilePathErrors,'*.png']);
 end
+if ~isfolder(outFilePathErrors)
+        mkdir(outFilePathErrors)
+end
+% Purge existing *.png files
+% Assume Linux
+eval(['!rm -f ',outFilePath,'*.png']);
+eval(['!rm -f ',outFilePathErrors,'*.png']);
 
 %%
 %%%%%%%%%% Load the NOC E-P matrices %%%%%%%%%%
@@ -193,6 +198,9 @@ eminusp_ann = eminusp_smooth; clear eminusp_smooth
 %% Set plotting variables and load file
 smooth = 1; % Smooth input matrices?
 time_range = '((2000-1950)/50))';  time_rangen = (2000-1950)/50;
+if strcmp(infile,'201223_152459')
+    time_range = '((2020-1950)/70))';  time_rangen = (2020-1950)/70;
+end
 load(infile, 'sigma_levels', 'pressure_levels', 'sc')
 param_count = size(sc,4);
 infile_flat = regexprep(infile,'_','\\_');

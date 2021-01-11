@@ -52,11 +52,12 @@
 
 % make_nc_sfc.m
 
-% Cleanup workspace and command window
-clear, clc, close all
-% Initialise environment variables
-[home_dir,work_dir,~,username,a_hostname,~,~,a_matver] = myMatEnv(2);
-if ~sum(strcmp(username,{'dur041','duro'})); disp('**myMatEnv - username error**'); keyboard; end
+%% Cleanup workspace and command window
+% Initialise environment variables - only homeDir needed for file cleanups
+%[homeDir,work_dir,data_dir,obsDir,username,a_host_longname,a_maxThreads,a_opengl,a_matver] = myMatEnv(maxThreads);
+[homeDir,~,~,obsDir,username,~,~,~,~] = myMatEnv(2);
+archiveDir = [homeDir,'090605_FLR2_sptg/'];
+if ~sum(strcmp(username,{'dur041','duro','durack1'})); disp('**myMatEnv - username error**'); keyboard; end
 
 %% If running through entire script cleanup export files
 data_dir = os_path('090605_FLR2_sptg/');

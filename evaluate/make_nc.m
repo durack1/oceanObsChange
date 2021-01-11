@@ -2,6 +2,7 @@
 % Paul J. Durack 4 November 2009
 
 % This script exports resolved ocean change fields to netcdf
+
 % Comments Nov 2009 - Apr 2011 inclusive
 %{
 % PJD  4 Nov 2009   - Obtained nc code from make_models.m
@@ -30,7 +31,7 @@
 % PJD 24 Mar 2011   - Requested new '*_change' standard names
 % PJD  8 Apr 2011   - Added depth masking using bathymetry data to mask out near-coastal regions
 % PJD  8 Apr 2011   - Updated call to myMatEnv to include clim_dir variable assignment
-%}
+%
 % PJD 17 May 2011   - Updated standard names for variables which have them - names requested 110516
 % PJD 17 May 2011   - Included *_bnds variables (time climatology_bnds needs work)
 % PJD 17 May 2011   - Ignored '*_change_error' standard name request - too hard - don't provide a standard name for these variables
@@ -57,7 +58,9 @@
 % PJD  2 Aug 2011   - TODO: Update using pressure corrected Argo (1950-2010), provide as v1.1 with suitable additional attributes
 % PJD  2 Aug 2011   - TODO: Consider adding new abyssal data as presented by Purkey & Johnson (2010), need to account for topography (Jeff's code)
 % PJD  2 Aug 2011   - TODO: Update valid_ranges, and info about density = neutral density (kg m-3 minus 1000)
-
+%}
+% PJD 10 Jan 2021   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/090605_FLR2_sptg/make_nc.m (110801)
+%                     and updated input
 % make_nc.m
 
 % Cleanup workspace and command window

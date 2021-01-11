@@ -2,6 +2,7 @@
 % Paul J. Durack 4 November 2009
 
 % This script exports resolved ocean change fields to netcdf
+
 % Comments Nov 2009 - Apr 2011 inclusive
 %{
 % PJD  4 Nov 2009   - Obtained nc code from make_models.m
@@ -30,7 +31,7 @@
 % PJD  7 Apr 2011   - Removed longitude duplication (0 & 360) in observed data - fixed problem with basins3_NaN_ones_2x1 variable
 % PJD  7 Apr 2011   - Requested new '*_change' standard names
 % PJD  7 Apr 2011   - Updated for correct outvars for myMatEnv (clim_dir)
-%}
+%
 % PJD 22 Jun 2011   - Updated following updated applied to make_nc.m
 % PJD 22 Jun 2011   - Updated outfile to just *_beta.nc (removed datestamp)
 % PJD 22 Jun 2011   - Updated some hard-coded entries to use standard_names and time* variables
@@ -45,6 +46,9 @@
 % PJD  2 Aug 2011   - TODO: Consider data packing/compression http://nco.sourceforge.net/nco.html#Packed-data
 % PJD  2 Aug 2011   - TODO: Consider adding comment global att, which can contain more info than name
 % PJD  2 Aug 2011   - TODO: Consider time_bnds for climatology and temporal data - http://cf-pcmdi.llnl.gov/documents/cf-conventions/1.4/ch07s04.html
+%}
+% PJD 10 Jan 2021   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/090605_FLR2_sptg/make_nc_sfc.m (110801)
+%                     and updated input
 
 % make_nc_sfc.m
 

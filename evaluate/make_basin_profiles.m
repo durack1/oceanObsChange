@@ -85,6 +85,7 @@ function make_basin_profiles(infile,dateTime)
 % PJD 15 Sep 2020   - Copied from /work/durack1/Shared/090605_FLR2_sptg/make_basin_profiles.m (091126)
 %                     and updated input
 % PJD  9 Jan 2021   - Updated as function call
+% PJD 11 Jan 2021   - Added return to nargin queries - gracefully exit
 
 %% Cleanup workspace and command window
 % Initialise environment variables - only homeDir needed for file cleanups
@@ -96,8 +97,8 @@ paperplots = 0; % Turn off data generation for paperplots
 
 %% Change the infile and pathnames
 % Create inputs if they are not passed as arguments - check usage below..
-if nargin < 1, disp('No valid arguments, exiting'); end
-if nargin > 2, disp('Too many arguments, exiting'); end
+if nargin < 1, disp('No valid arguments, exiting'); return; end
+if nargin > 2, disp('Too many arguments, exiting'); return; end
 if nargin == 2
    % Validate input is matfile
    if isfile(infile)

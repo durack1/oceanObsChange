@@ -4,6 +4,9 @@ hold
 # Matlab
 *.asv
 
+# Ferret
+*.jnl
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

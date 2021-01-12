@@ -132,6 +132,7 @@ function make_levels(infile)
 % PJD  7 Jan 2021   - Update to validate infile and extract parts
 % PJD  9 Jan 2021   - Updated logic about existing directories - don't assume they exist
 % PJD  9 Jan 2021   - Update to use dateTime in outDir - updated format
+% PJD 11 Jan 2021   - Added return to nargin queries - gracefully exit
 
 %% Cleanup workspace and command window
 % Initialise environment variables - only homeDir needed for file cleanups
@@ -143,8 +144,8 @@ paperplots = 0; % Turn off data generation for paperplots
 
 %% Change the infile and pathnames
 % Create inputs if they are not passed as arguments - check usage below..
-if nargin < 1, disp('No valid input file, exiting'); end
-if nargin > 1, disp('Too many arguments, exiting'); end
+if nargin < 1, disp('No valid input file, exiting'); return; end
+if nargin > 1, disp('Too many arguments, exiting'); return; end
 if nargin == 1
    % Validate input is matfile
    if isfile(infile)

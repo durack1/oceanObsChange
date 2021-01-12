@@ -1,7 +1,9 @@
+function make_nc(infile)
 % Write results out to netcdf format
+%
+% inputs:   infile - input mat file following standard analysis output format
+%
 % Paul J. Durack 4 November 2009
-
-% This script exports resolved ocean change fields to netcdf
 
 % Comments Nov 2009 - Apr 2011 inclusive
 %{
@@ -66,30 +68,62 @@
 
 %% Cleanup workspace and command window
 % Initialise environment variables - only homeDir needed for file cleanups
-%[homeDir,work_dir,data_dir,obsDir,username,a_host_longname,a_maxThreads,a_opengl,a_matver] = myMatEnv(maxThreads);
-[homeDir,~,~,obsDir,username,~,~,~,~] = myMatEnv(2);
-archiveDir = [homeDir,'090605_FLR2_sptg/'];
+%[homeDir,work_dir,dataDir,obsDir,username,a_host_longname,a_maxThreads,a_opengl,a_matver] = myMatEnv(maxThreads);
+[homeDir,~,~,~,username,aHostLongname,~,~,~] = myMatEnv(2);
+%archiveDir = [homeDir,'090605_FLR2_sptg/'];
 if ~sum(strcmp(username,{'dur041','duro','durack1'})); disp('**myMatEnv - username error**'); keyboard; end
 
-%% If running through entire script cleanup export files
-data_dir = os_path('090605_FLR2_sptg/');
-include_density = 0;
-data_infile = '090605_190300_local_robust_1950_FLRdouble_sptg_79pres1000_v7.mat';
-infile = [home_dir,data_dir,data_infile];
-outfile = ([home_dir,data_dir,'DurackandWijffels_GlobalOceanChanges_1950-2000_beta.nc']); % Finalised file
-%outfile = ([home_dir,data_dir,'DurackandWijffels_GlobalOceanChanges_1950-2000_',regexprep([datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)],':','_'),'_beta.nc']);
-disp('* Are you sure you want to purge exported *.nc files? *'); keyboard
-delete([home_dir,data_dir,'Durack*GlobalOceanChanges*2000_beta.nc']);
-delete([home_dir,data_dir,'Durack*GlobalOceanChanges*',[datestr(now,11),datestr(now,5),datestr(now,7)],'*.nc']);
+%% Change the infile and pathnames
+% Create inputs if they are not passed as arguments - check usage below..
+if nargin < 1, disp('No valid input file, exiting'); return; end
+if nargin > 1, disp('Too many arguments, exiting'); return; end
+if nargin == 1
+   % Validate input is matfile
+   if isfile(infile)
+       fclose('all');
+       [fid,~] = fopen(infile);
+       S = convertCharsToStrings(fread(fid,80,'uint8=>char')); % read 80 elements, captures all version and date info
+       ind = strfind(S,',');
+       fclose(fid); clear fid
+       matver = extractBefore(S,ind(1)); clear ind
+       disp(matver)
+       if contains(matver,'MAT-file')
+           [outPath,name,ext] = fileparts(infile);
+           %fileNameBits = split(name,'_'); % cell array
+           %outPath = char(fullfile(filePath,join(fileNameBits([1,2,5,7:end]),'_')));
+           disp(outPath)
+       else
+           disp('No valid MAT-file, exiting')
+           quit
+       end % contains(matver
+   end % isfile(infile)
+end % nargin == 1
 
-%% Create strings for data labels
-timeyrs     = '50yrs';
-timewindow  = '1950-2000';
-timeend     = '2009-04-04';
+%% Create strings for data labels - when updated read from file
+timeYrs     = '70yrs'; %'50yrs';
+timeWindow  = '1950-2020'; %'1950-2000';
+timeEnd     = '2020-12-11'; %'2009-04-04';
+climBndsEnd = '2020-12-31';
+timeStop    = timeEnd(1:4);
+include_density = 0;
+
+%% If running through entire script cleanup export files
+%dataDir = os_path('090605_FLR2_sptg/');
+%data_infile = '090605_190300_local_robust_1950_FLRdouble_sptg_79pres1000_v7.mat';
+%infile = [homeDir,dataDir,data_infile];
+infile = char(fullfile(outPath,[name,ext]));
+%outFile = (char(fullfile(outPath,['DurackandWijffels_GlobalOceanChanges_1950-',timeStop,'_beta.nc']))); % Finalised file
+%disp(['outFile:',outFile])
+outFile = (char(fullfile(outPath,['DurackandWijffels_GlobalOceanChanges_1950-',timeStop,'_', ...
+           regexprep([datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)],':','_'),'_beta.nc'])));
+disp(['outFile:',outFile])
+disp('* Are you sure you want to purge exported *.nc files? *'); keyboard
+delete([outPath,['Durack*GlobalOceanChanges*',timeStop,'_beta.nc']]);
+delete([outPath,'Durack*GlobalOceanChanges*',[datestr(now,11),datestr(now,5),datestr(now,7)],'*.nc']);
 
 %% Load input data
 load(infile, ...
-     'a_file_process_time','a_host_longname','a_matlab_version','a_script_name','a_script_start_time', ...
+     'a_file_process_time','a_gitHash','a_host_longname','a_matlab_version','a_script_name','a_script_start_time', ...
      'pressure_levels','ptc','ptce','ptmean','sc','sce','smean','gamrfc','gamrfce','gamrfmean','xi','yi'); %, ...
      %'sxdatscale','sydatscale');
 
@@ -111,15 +145,15 @@ gamrf_mean = squeeze(gamrfmean(1:180,:,1:z_lvl))+squeeze(gamrfc(1:180,:,1:z_lvl,
 
 %% Create bounds variables
 % Time
-climatology_bnds = datenum({'1950-1-1','1999-12-31'}); % bounds of change climatology
+climatology_bnds = datenum({'1950-1-1',climBndsEnd}); % bounds of change climatology
 time = mean(([climatology_bnds(1),climatology_bnds(2)]))-datenum('1950-1-1'); % middle day of middle year
 climatology_bnds = climatology_bnds-datenum('1950-1-1');
-climatology_bnds_mean = datenum({'1950-1-1','2009-04-04'}); % bounds of mean climatology
-time_mean = mean(([climatology_bnds_mean(1),climatology_bnds_mean(2)]))-datenum('1950-1-1');
-climatology_bnds_mean = climatology_bnds_mean-datenum('1950-1-1');
+%climatology_bnds_mean = datenum({'1950-1-1',timeEnd}); % bounds of mean climatology
+%time_mean = mean(([climatology_bnds_mean(1),climatology_bnds_mean(2)]))-datenum('1950-1-1');
+%climatology_bnds_mean = climatology_bnds_mean-datenum('1950-1-1');
 
 % Depth
-depth_bnds  = NaN(1:length(depth),2);
+depth_bnds  = NaN(length(depth),2);
 for x = 1:length(depth)
     if x == 1 % Fix start indices
         depth_bnds(x,1) = 0;
@@ -132,10 +166,10 @@ for x = 1:length(depth)
         depth_bnds(x,1) = (depth(x-1)+depth(x))/2;
         depth_bnds(x,2) = (depth(x)+depth(x+1))/2;
     end
-end; % [depth_bnds(:,1),depth,depth_bnds(:,2)]
+end % [depth_bnds(:,1),depth,depth_bnds(:,2)]
 
 % Latitude
-lat_bnds  = NaN(1:length(yi),2);
+lat_bnds  = NaN(length(yi),2);
 for x = 1:length(yi)
     if x == 1 % Fix start indices
         lat_bnds(x,1) = -70;
@@ -148,10 +182,10 @@ for x = 1:length(yi)
         lat_bnds(x,1) = (yi(x-1)+yi(x))/2;
         lat_bnds(x,2) = (yi(x)+yi(x+1))/2;
     end
-end; % [lat_bnds(:,1),yi',lat_bnds(:,2)]
+end % [lat_bnds(:,1),yi',lat_bnds(:,2)]
 
 % Longitude
-lon_bnds  = NaN(1:length(xi),2);
+lon_bnds  = NaN(length(xi),2);
 for x = 1:length(xi)
     if x == 1 % Fix start indices
         lon_bnds(x,1) = 0;
@@ -164,7 +198,7 @@ for x = 1:length(xi)
         lon_bnds(x,1) = (xi(x-1)+xi(x))/2;
         lon_bnds(x,2) = (xi(x)+xi(x+1))/2;
     end
-end; %[lon_bnds(:,1),xi',lon_bnds(:,2)]
+end %[lon_bnds(:,1),xi',lon_bnds(:,2)]
 
 %% Error mask bad data before infilling and smoothing - Check /home/dur041/Shared/090605_FLR2_sptg/110323_IMOS/make_paperplots.m
 % temperature
@@ -198,7 +232,7 @@ gamrf_chg  = gamrf_chg.*ind_bad;
 gamrf_mean = gamrf_mean.*ind_bad;
 
 %% Infill all fields
-load([home_dir,'code/make_basins.mat'], 'basins3_NaN_ones_2x1')
+load([homeDir,'code/make_basins.mat'], 'basins3_NaN_ones_2x1')
 % Fix issue with mask
 basins3_NaN_ones_2x1 = basins3_NaN_ones_2x1(:,1:180);
 basins3_NaN_ones_2x1(:,1) = basins3_NaN_ones_2x1(:,2);
@@ -243,7 +277,7 @@ lat = yi; clear yi
 depth = pressure_levels(1:z_lvl); clear pressure_levels
 
 %% Deal with topography (mask seafloor regions)
-infile_bath     = '/home/eez_data/bath/gebco08_1min.nc';
+infile_bath     = '/work/durack1/csiro/eez_data/bath/gebco08_1min.nc';
 bath            = getnc(infile_bath,'height');
 grid_spacing    = getnc(infile_bath,'grid_spacing');
 bath_lon_range  = getnc(infile_bath,'lon_range');
@@ -279,8 +313,8 @@ for x = 1:length(lon)
     end
 end
 
-%% Now create netcdf outfile
-ncid = netcdf.create(outfile,'NC_NOCLOBBER');
+%% Now create netcdf outFile
+ncid = netcdf.create(outFile,'NC_NOCLOBBER');
 
 % Initialise dimensions
 dimIdTime   = netcdf.defDim(ncid,'time',1);
@@ -292,42 +326,42 @@ dimIdBnds   = netcdf.defDim(ncid,'bounds',2);
 % Initialise variables
 % Time
 timeId = netcdf.defVar(ncid,'time','double',dimIdTime);
-netcdf.putatt(ncid,timeId,'climatology','climatology_bounds')
-netcdf.putatt(ncid,timeId,'units','days since 1950-1-1')
-netcdf.putatt(ncid,timeId,'calendar','gregorian')
-netcdf.putatt(ncid,timeId,'long_name','time')
-netcdf.putatt(ncid,timeId,'standard_name','time')
-netcdf.putatt(ncid,timeId,'axis','T')
+netcdf.putAtt(ncid,timeId,'climatology','climatology_bounds')
+netcdf.putAtt(ncid,timeId,'units','days since 1950-1-1')
+netcdf.putAtt(ncid,timeId,'calendar','gregorian')
+netcdf.putAtt(ncid,timeId,'long_name','time')
+netcdf.putAtt(ncid,timeId,'standard_name','time')
+netcdf.putAtt(ncid,timeId,'axis','T')
 
 % Depth
 depthId = netcdf.defVar(ncid,'depth','double',dimIdDepth);
-netcdf.putatt(ncid,depthId,'units','decibar')
-netcdf.putatt(ncid,depthId,'units_long','decibar (pressure)')
-netcdf.putatt(ncid,depthId,'long_name','sea_water_pressure')
-netcdf.putatt(ncid,depthId,'standard_name','sea_water_pressure')
-%netcdf.putatt(ncid,depthId,'units','m')
-%netcdf.putatt(ncid,depthId,'units_long','meters')
-%netcdf.putatt(ncid,depthId,'long_name','depth')
-%netcdf.putatt(ncid,depthId,'standard_name','depth')
-netcdf.putatt(ncid,depthId,'axis','Z')
-netcdf.putatt(ncid,depthId,'positive','down')
-netcdf.putatt(ncid,depthId,'bounds','depth_bnds')
+netcdf.putAtt(ncid,depthId,'units','decibar')
+netcdf.putAtt(ncid,depthId,'units_long','decibar (pressure)')
+netcdf.putAtt(ncid,depthId,'long_name','sea_water_pressure')
+netcdf.putAtt(ncid,depthId,'standard_name','sea_water_pressure')
+%netcdf.putAtt(ncid,depthId,'units','m')
+%netcdf.putAtt(ncid,depthId,'units_long','meters')
+%netcdf.putAtt(ncid,depthId,'long_name','depth')
+%netcdf.putAtt(ncid,depthId,'standard_name','depth')
+netcdf.putAtt(ncid,depthId,'axis','Z')
+netcdf.putAtt(ncid,depthId,'positive','down')
+netcdf.putAtt(ncid,depthId,'bounds','depth_bnds')
 
 % Latitude
 latId = netcdf.defVar(ncid,'latitude','double',dimIdLat);
-netcdf.putatt(ncid,latId,'units','degrees_north')
-netcdf.putatt(ncid,latId,'long_name','latitude')
-netcdf.putatt(ncid,latId,'standard_name','latitude')
-netcdf.putatt(ncid,latId,'axis','Y')
-netcdf.putatt(ncid,latId,'bounds','lat_bnds');
+netcdf.putAtt(ncid,latId,'units','degrees_north')
+netcdf.putAtt(ncid,latId,'long_name','latitude')
+netcdf.putAtt(ncid,latId,'standard_name','latitude')
+netcdf.putAtt(ncid,latId,'axis','Y')
+netcdf.putAtt(ncid,latId,'bounds','lat_bnds');
 
 % Longitude
 lonId = netcdf.defVar(ncid,'longitude','double',dimIdLon);
-netcdf.putatt(ncid,lonId,'units','degrees_east')
-netcdf.putatt(ncid,lonId,'long_name','longitude')
-netcdf.putatt(ncid,lonId,'standard_name','longitude')
-netcdf.putatt(ncid,lonId,'axis','X')
-netcdf.putatt(ncid,lonId,'bounds','lon_bnds');
+netcdf.putAtt(ncid,lonId,'units','degrees_east')
+netcdf.putAtt(ncid,lonId,'long_name','longitude')
+netcdf.putAtt(ncid,lonId,'standard_name','longitude')
+netcdf.putAtt(ncid,lonId,'axis','X')
+netcdf.putAtt(ncid,lonId,'bounds','lon_bnds');
 
 % Bounds
 timebndsId = netcdf.defVar(ncid,'climatology_bounds','double',[dimIdBnds,dimIdTime]);
@@ -337,108 +371,117 @@ lonbndsId = netcdf.defVar(ncid,'lon_bnds','double',[dimIdBnds,dimIdLon]);
 
 % Variables
 var_pt_mean_id = netcdf.defVar(ncid,'thetao_mean','float',[dimIdLon,dimIdLat,dimIdDepth,dimIdTime]);
-netcdf.putatt(ncid,var_pt_mean_id,'units','degree_C')
-netcdf.putatt(ncid,var_pt_mean_id,'long_name',['Potential Temperature mean ',timewindow])
-netcdf.putatt(ncid,var_pt_mean_id,'standard_name','sea_water_potential_temperature')
-netcdf.putatt(ncid,var_pt_mean_id,'_FillValue',single(1.0e+20))
-netcdf.putatt(ncid,var_pt_mean_id,'missing_value',single(1.0e+20))
-netcdf.putatt(ncid,var_pt_mean_id,'valid_range',single([-2 35]))
-netcdf.putatt(ncid,var_pt_mean_id,'comment',[['Error threshold: ',num2str(pt_threshold,'%2.1f'),10], ...
-                                             ['Mean calculated over period: 1950-1-1 to ',timeend]])
+netcdf.putAtt(ncid,var_pt_mean_id,'units','degree_C')
+netcdf.putAtt(ncid,var_pt_mean_id,'long_name',['Potential Temperature mean ',timeWindow])
+netcdf.putAtt(ncid,var_pt_mean_id,'standard_name','sea_water_potential_temperature')
+netcdf.putAtt(ncid,var_pt_mean_id,'_FillValue',single(1.0e+20))
+netcdf.putAtt(ncid,var_pt_mean_id,'missing_value',single(1.0e+20))
+netcdf.putAtt(ncid,var_pt_mean_id,'valid_range',single([-2 35]))
+netcdf.putAtt(ncid,var_pt_mean_id,'comment',[['Error threshold: ',num2str(pt_threshold,'%2.1f'),10], ...
+                                             ['Mean calculated over period: 1950-1-1 to ',timeEnd]])
 var_pt_chg_id = netcdf.defVar(ncid,'thetao_change','float',[dimIdLon,dimIdLat,dimIdDepth,dimIdTime]);
-netcdf.putatt(ncid,var_pt_chg_id,'units',['degree_C/',timeyrs])
-netcdf.putatt(ncid,var_pt_chg_id,'long_name',['Potential Temperature change ',timewindow])
-netcdf.putatt(ncid,var_pt_chg_id,'standard_name','change_over_time_in_sea_water_potential_temperature')
-netcdf.putatt(ncid,var_pt_chg_id,'_FillValue',single(1.0e+20))
-netcdf.putatt(ncid,var_pt_chg_id,'missing_value',single(1.0e+20))
-netcdf.putatt(ncid,var_pt_chg_id,'valid_range',single([-2 2]))
-netcdf.putatt(ncid,var_pt_chg_id,'comment',['Error threshold: ',num2str(pt_threshold,'%2.1f')])
+netcdf.putAtt(ncid,var_pt_chg_id,'units',['degree_C/',timeYrs])
+netcdf.putAtt(ncid,var_pt_chg_id,'long_name',['Potential Temperature change ',timeWindow])
+netcdf.putAtt(ncid,var_pt_chg_id,'standard_name','change_over_time_in_sea_water_potential_temperature')
+netcdf.putAtt(ncid,var_pt_chg_id,'_FillValue',single(1.0e+20))
+netcdf.putAtt(ncid,var_pt_chg_id,'missing_value',single(1.0e+20))
+netcdf.putAtt(ncid,var_pt_chg_id,'valid_range',single([-2 2]))
+netcdf.putAtt(ncid,var_pt_chg_id,'comment',['Error threshold: ',num2str(pt_threshold,'%2.1f')])
 var_pt_chg_err_id = netcdf.defVar(ncid,'thetao_change_error','float',[dimIdLon,dimIdLat,dimIdDepth,dimIdTime]);
-netcdf.putatt(ncid,var_pt_chg_err_id,'units',['degree_C/',timeyrs])
-netcdf.putatt(ncid,var_pt_chg_err_id,'long_name',['Potential Temperature change error ',timewindow])
-%netcdf.putatt(ncid,var_pt_chg_err_id,'standard_name','change_over_time_in_sea_water_potential_temperature_error')
-netcdf.putatt(ncid,var_pt_chg_err_id,'_FillValue',single(1.0e+20))
-netcdf.putatt(ncid,var_pt_chg_err_id,'missing_value',single(1.0e+20))
-netcdf.putatt(ncid,var_pt_chg_err_id,'comment','  ')
+netcdf.putAtt(ncid,var_pt_chg_err_id,'units',['degree_C/',timeYrs])
+netcdf.putAtt(ncid,var_pt_chg_err_id,'long_name',['Potential Temperature change error ',timeWindow])
+%netcdf.putAtt(ncid,var_pt_chg_err_id,'standard_name','change_over_time_in_sea_water_potential_temperature_error')
+netcdf.putAtt(ncid,var_pt_chg_err_id,'_FillValue',single(1.0e+20))
+netcdf.putAtt(ncid,var_pt_chg_err_id,'missing_value',single(1.0e+20))
+netcdf.putAtt(ncid,var_pt_chg_err_id,'comment','  ')
 var_s_mean_id = netcdf.defVar(ncid,'salinity_mean','float',[dimIdLon,dimIdLat,dimIdDepth,dimIdTime]);
-netcdf.putatt(ncid,var_s_mean_id,'units','1e-3')
-netcdf.putatt(ncid,var_s_mean_id,'units_long','PSS-78')
-netcdf.putatt(ncid,var_s_mean_id,'long_name',['Salinity mean ',timewindow])
-%netcdf.putatt(ncid,var_s_mean_id,'standard_name','sea_water_practical_salinity')
-netcdf.putatt(ncid,var_s_mean_id,'standard_name','sea_water_salinity')
-netcdf.putatt(ncid,var_s_mean_id,'_FillValue',single(1.0e+20))
-netcdf.putatt(ncid,var_s_mean_id,'missing_value',single(1.0e+20))
-netcdf.putatt(ncid,var_s_mean_id,'valid_range',single([6 42]))
-netcdf.putatt(ncid,var_s_mean_id,'comment',[['Error threshold: ',num2str(s_threshold,'%2.1f'),10], ...
-                                            ['Mean calculated over period: 1950-1-1 to ',timeend]])
+netcdf.putAtt(ncid,var_s_mean_id,'units','1e-3')
+netcdf.putAtt(ncid,var_s_mean_id,'units_long','PSS-78')
+netcdf.putAtt(ncid,var_s_mean_id,'long_name',['Salinity mean ',timeWindow])
+%netcdf.putAtt(ncid,var_s_mean_id,'standard_name','sea_water_practical_salinity')
+netcdf.putAtt(ncid,var_s_mean_id,'standard_name','sea_water_salinity')
+netcdf.putAtt(ncid,var_s_mean_id,'_FillValue',single(1.0e+20))
+netcdf.putAtt(ncid,var_s_mean_id,'missing_value',single(1.0e+20))
+netcdf.putAtt(ncid,var_s_mean_id,'valid_range',single([6 42]))
+netcdf.putAtt(ncid,var_s_mean_id,'comment',[['Error threshold: ',num2str(s_threshold,'%2.1f'),10], ...
+                                            ['Mean calculated over period: 1950-1-1 to ',timeEnd]])
 var_s_chg_id = netcdf.defVar(ncid,'salinity_change','float',[dimIdLon,dimIdLat,dimIdDepth,dimIdTime]);
-netcdf.putatt(ncid,var_s_chg_id,'units',['1e-3/',timeyrs])
-netcdf.putatt(ncid,var_s_chg_id,'units_long',['PSS-78/',timeyrs])
-netcdf.putatt(ncid,var_s_chg_id,'long_name',['Salinity change ',timewindow])
-%netcdf.putatt(ncid,var_s_chg_id,'standard_name','change_over_time_in_sea_water_practical_salinity')
-netcdf.putatt(ncid,var_s_chg_id,'standard_name','change_over_time_in_sea_water_salinity')
-netcdf.putatt(ncid,var_s_chg_id,'_FillValue',single(1.0e+20))
-netcdf.putatt(ncid,var_s_chg_id,'missing_value',single(1.0e+20))
-netcdf.putatt(ncid,var_s_chg_id,'valid_range',single([-1 1]))
-netcdf.putatt(ncid,var_s_chg_id,'comment',['Error threshold: ',num2str(s_threshold,'%2.1f')])
+netcdf.putAtt(ncid,var_s_chg_id,'units',['1e-3/',timeYrs])
+netcdf.putAtt(ncid,var_s_chg_id,'units_long',['PSS-78/',timeYrs])
+netcdf.putAtt(ncid,var_s_chg_id,'long_name',['Salinity change ',timeWindow])
+%netcdf.putAtt(ncid,var_s_chg_id,'standard_name','change_over_time_in_sea_water_practical_salinity')
+netcdf.putAtt(ncid,var_s_chg_id,'standard_name','change_over_time_in_sea_water_salinity')
+netcdf.putAtt(ncid,var_s_chg_id,'_FillValue',single(1.0e+20))
+netcdf.putAtt(ncid,var_s_chg_id,'missing_value',single(1.0e+20))
+netcdf.putAtt(ncid,var_s_chg_id,'valid_range',single([-1 1]))
+netcdf.putAtt(ncid,var_s_chg_id,'comment',['Error threshold: ',num2str(s_threshold,'%2.1f')])
 var_s_chg_err_id = netcdf.defVar(ncid,'salinity_change_error','float',[dimIdLon,dimIdLat,dimIdDepth,dimIdTime]);
-netcdf.putatt(ncid,var_s_chg_err_id,'units',['1e-3/',timeyrs])
-netcdf.putatt(ncid,var_s_chg_err_id,'units_long',['PSS-78/',timeyrs])
-netcdf.putatt(ncid,var_s_chg_err_id,'long_name',['Salinity change error ',timewindow])
-%netcdf.putatt(ncid,var_s_chg_err_id,'standard_name','change_over_time_in_sea_water_practical_salinity_error')
-netcdf.putatt(ncid,var_s_chg_err_id,'_FillValue',single(1.0e+20))
-netcdf.putatt(ncid,var_s_chg_err_id,'missing_value',single(1.0e+20))
-netcdf.putatt(ncid,var_s_chg_err_id,'comment','  ')
+netcdf.putAtt(ncid,var_s_chg_err_id,'units',['1e-3/',timeYrs])
+netcdf.putAtt(ncid,var_s_chg_err_id,'units_long',['PSS-78/',timeYrs])
+netcdf.putAtt(ncid,var_s_chg_err_id,'long_name',['Salinity change error ',timeWindow])
+%netcdf.putAtt(ncid,var_s_chg_err_id,'standard_name','change_over_time_in_sea_water_practical_salinity_error')
+netcdf.putAtt(ncid,var_s_chg_err_id,'_FillValue',single(1.0e+20))
+netcdf.putAtt(ncid,var_s_chg_err_id,'missing_value',single(1.0e+20))
+netcdf.putAtt(ncid,var_s_chg_err_id,'comment','  ')
 if include_density
     var_g_mean_id = netcdf.defVar(ncid,'density_mean','float',[dimIdLon,dimIdLat,dimIdDepth,dimIdTime]);
-    netcdf.putatt(ncid,var_g_mean_id,'units','kg m-3')
-    netcdf.putatt(ncid,var_g_mean_id,'units_long','kg m-3')
-    netcdf.putatt(ncid,var_g_mean_id,'long_name',['Neutral Density mean ',timewindow])
-    netcdf.putatt(ncid,var_g_mean_id,'standard_name','sea_water_neutral_density')
-    netcdf.putatt(ncid,var_g_mean_id,'_FillValue',single(1.0e+20))
-    netcdf.putatt(ncid,var_g_mean_id,'missing_value',single(1.0e+20))
-    netcdf.putatt(ncid,var_g_mean_id,'valid_range',single([6 42]))
-    netcdf.putatt(ncid,var_g_mean_id,'comment',[['Error threshold: ',num2str(g_threshold,'%2.1f'),10], ...
-                                                ['Mean calculated over period: 1950-1-1 to ',timeend]])
+    netcdf.putAtt(ncid,var_g_mean_id,'units','kg m-3')
+    netcdf.putAtt(ncid,var_g_mean_id,'units_long','kg m-3')
+    netcdf.putAtt(ncid,var_g_mean_id,'long_name',['Neutral Density mean ',timeWindow])
+    netcdf.putAtt(ncid,var_g_mean_id,'standard_name','sea_water_neutral_density')
+    netcdf.putAtt(ncid,var_g_mean_id,'_FillValue',single(1.0e+20))
+    netcdf.putAtt(ncid,var_g_mean_id,'missing_value',single(1.0e+20))
+    netcdf.putAtt(ncid,var_g_mean_id,'valid_range',single([6 42]))
+    netcdf.putAtt(ncid,var_g_mean_id,'comment',[['Error threshold: ',num2str(g_threshold,'%2.1f'),10], ...
+                                                ['Mean calculated over period: 1950-1-1 to ',timeEnd]])
     var_g_chg_id = netcdf.defVar(ncid,'density_change','float',[dimIdLon,dimIdLat,dimIdDepth,dimIdTime]);
-    netcdf.putatt(ncid,var_g_chg_id,'units',['kg m-3/',timeyrs])
-    netcdf.putatt(ncid,var_g_chg_id,'units_long',['kg m-3/',timeyrs])
-    netcdf.putatt(ncid,var_g_chg_id,'long_name',['Density change ',timewindow])
-    netcdf.putatt(ncid,var_g_chg_id,'standard_name','change_over_time_in_sea_water_neutral_density')
-    netcdf.putatt(ncid,var_g_chg_id,'_FillValue',single(1.0e+20))
-    netcdf.putatt(ncid,var_g_chg_id,'missing_value',single(1.0e+20))
-    netcdf.putatt(ncid,var_g_chg_id,'valid_range',single([-1 1]))
-    netcdf.putatt(ncid,var_g_chg_id,'comment','  ')
+    netcdf.putAtt(ncid,var_g_chg_id,'units',['kg m-3/',timeYrs])
+    netcdf.putAtt(ncid,var_g_chg_id,'units_long',['kg m-3/',timeYrs])
+    netcdf.putAtt(ncid,var_g_chg_id,'long_name',['Density change ',timeWindow])
+    netcdf.putAtt(ncid,var_g_chg_id,'standard_name','change_over_time_in_sea_water_neutral_density')
+    netcdf.putAtt(ncid,var_g_chg_id,'_FillValue',single(1.0e+20))
+    netcdf.putAtt(ncid,var_g_chg_id,'missing_value',single(1.0e+20))
+    netcdf.putAtt(ncid,var_g_chg_id,'valid_range',single([-1 1]))
+    netcdf.putAtt(ncid,var_g_chg_id,'comment','  ')
     var_g_chg_err_id = netcdf.defVar(ncid,'density_change_error','float',[dimIdLon,dimIdLat,dimIdDepth,dimIdTime]);
-    netcdf.putatt(ncid,var_g_chg_err_id,'units',['kg m-3/',timeyrs])
-    netcdf.putatt(ncid,var_g_chg_err_id,'units_long',['kg m-3/',timeyrs])
-    netcdf.putatt(ncid,var_g_chg_err_id,'long_name',['Density change error ',timewindow])
-    %netcdf.putatt(ncid,var_g_chg_err_id,'standard_name','change_over_time_in_sea_water_neutral_density_error')
-    netcdf.putatt(ncid,var_g_chg_err_id,'_FillValue',single(1.0e+20))
-    netcdf.putatt(ncid,var_g_chg_err_id,'missing_value',single(1.0e+20))
-    netcdf.putatt(ncid,var_g_chg_err_id,'comment','  ')
+    netcdf.putAtt(ncid,var_g_chg_err_id,'units',['kg m-3/',timeYrs])
+    netcdf.putAtt(ncid,var_g_chg_err_id,'units_long',['kg m-3/',timeYrs])
+    netcdf.putAtt(ncid,var_g_chg_err_id,'long_name',['Density change error ',timeWindow])
+    %netcdf.putAtt(ncid,var_g_chg_err_id,'standard_name','change_over_time_in_sea_water_neutral_density_error')
+    netcdf.putAtt(ncid,var_g_chg_err_id,'_FillValue',single(1.0e+20))
+    netcdf.putAtt(ncid,var_g_chg_err_id,'missing_value',single(1.0e+20))
+    netcdf.putAtt(ncid,var_g_chg_err_id,'comment','  ')
 end
 
 % Global attributes
 attIdGlobal = netcdf.getConstant('NC_GLOBAL');
-netcdf.putatt(ncid,attIdGlobal,'title',['Observed Global Ocean property changes for the 20th Century ',timewindow]);
-netcdf.putatt(ncid,attIdGlobal,'institution','CSIRO Marine and Atmospheric Research, Hobart, TAS, Australia');
-netcdf.putatt(ncid,attIdGlobal,'version','1.0.0; Beta - pre-release data');
-netcdf.putatt(ncid,attIdGlobal,'contact',['Paul Durack; Paul.Durack@csiro.au (',username,'); +61 3 6232 5283']);
-netcdf.putatt(ncid,attIdGlobal,'sourcefile',infile);
-netcdf.putatt(ncid,attIdGlobal,'sourcefile_atts',[['script_name: ',a_script_name,10], ...
+netcdf.putAtt(ncid,attIdGlobal,'Conventions','CF-1.7');
+netcdf.putAtt(ncid,attIdGlobal,'title',['Observed Global Ocean property changes for the 20th Century ',timeWindow]);
+netcdf.putAtt(ncid,attIdGlobal,'institution','Program for Climate Model Diagnosis and Intercomparison, LLNL, Livermore, CA, USA');
+netcdf.putAtt(ncid,attIdGlobal,'version','1.2.0; Beta - pre-release data');
+netcdf.putAtt(ncid,attIdGlobal,'contact',['Paul J. Durack; pauldurack@llnl.gov (',username,'); +1 925 422 5208']);
+netcdf.putAtt(ncid,attIdGlobal,'sourcefile',infile);
+% Validate through md5
+[~,infileMd5Str] = unix(['/usr/bin/md5sum ',infile]);
+infileMd5 = strsplit(infileMd5Str,' ');
+netcdf.putAtt(ncid,attIdGlobal,'sourcefile_md5',char(infileMd5(1)));
+% fix a_script_name
+a_script_name = strrep(a_script_name,'//','/')
+a_gitHash = ['github.com/durack1/oceanObs/commit/',a_gitHash]
+netcdf.putAtt(ncid,attIdGlobal,'sourcefile_atts',[['script_name: ',a_script_name,10], ...
+                                                  ['git_hash: ',a_gitHash,10], ...
                                                   ['host_longname: ',a_host_longname,10], ...
                                                   ['matlab_version: ',a_matlab_version,10], ...
                                                   ['start_time: ',a_script_start_time,10], ...
                                                   ['process_time: ',num2str(a_file_process_time)]]);
 [~,timestr] = unix('date --utc +%d-%b-%Y\ %X');
-netcdf.putatt(ncid,attIdGlobal,'history',[regexprep(timestr,'\r\n|\n|\r',''),' UTC; Hobart, TAS, Australia']);
-hoststr = [a_hostname,'; Matlab Version: ',version];
-netcdf.putatt(ncid,attIdGlobal,'host',hoststr);
-netcdf.putatt(ncid,attIdGlobal,'Conventions','CF-1.5');
-netcdf.putatt(ncid,attIdGlobal,'Reference','Durack P.J. & S.E. Wijffels (2010) Fifty-Year Trends in Global Ocean Salinities and their Relationship to Broadscale Warming. Journal of Climate, 23, 4342-4362');
-netcdf.putatt(ncid,attIdGlobal,'Reference_doi','http://dx.doi.org/10.1175/2010JCLI3377.1');
-netcdf.putatt(ncid,attIdGlobal,'Reference_www','http://www.cmar.csiro.au/oceanchange/');
+%netcdf.putAtt(ncid,attIdGlobal,'history',[regexprep(timestr,'\r\n|\n|\r',''),' UTC; Hobart, TAS, Australia']);
+netcdf.putAtt(ncid,attIdGlobal,'history',[regexprep(timestr,'\r\n|\n|\r',''),' UTC; Livermore, California, USA']);
+hoststr = [aHostLongname,'; Matlab Version: ',version];
+netcdf.putAtt(ncid,attIdGlobal,'host',hoststr);
+netcdf.putAtt(ncid,attIdGlobal,'Reference','Durack P.J. & S.E. Wijffels (2010) Fifty-Year Trends in Global Ocean Salinities and their Relationship to Broadscale Warming. Journal of Climate, 23, 4342-4362');
+netcdf.putAtt(ncid,attIdGlobal,'Reference_doi','http://doi.org/10.1175/2010JCLI3377.1');
+netcdf.putAtt(ncid,attIdGlobal,'Reference_www','http://www.cmar.csiro.au/oceanchange/');
 netcdf.endDef(ncid); % Leave define and enter data mode
 
 % Write out data to file

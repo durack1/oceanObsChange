@@ -136,6 +136,7 @@
 % PJD 19 Nov 2020   - Update to terminate from within script
 % PJD 23 Dec 2020   - Update for latest obs 201223; Added rmpath to cleanup links
 % PJD 23 Dec 2020   - Update SOI index (get_climind, and SOI inputs)
+% PJD 12 Jan 2020   - Correct a_script_name dob var #3
 
 warning off all % Suppress warning messages
 tic % Start timing script
@@ -161,7 +162,7 @@ home_dir = '/export/durack1/git/oceanObs/';
 %arch_dir = '/work/durack1/Shared/090605_FLR2_sptg/'; % Original data source
 obs_dir = '/work/durack1/Shared/200428_data_OceanObsAnalysis/';
 grab_dir = '/work/durack1/Shared/';
-a_script_name = [home_dir,'/',script_name,'.m']; % Needs to be explicitly written
+a_script_name = [home_dir,script_name,'.m']; % Needs to be explicitly written
 a_script_start_time = [datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)];
 a_matlab_version = mat_version;
 % Find repo version

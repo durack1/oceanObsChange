@@ -410,7 +410,7 @@ for ix = 1:length(xi) % for length(lon)
     %% End Solver
 
     %% Save to output *.mat files - using dynamic filename - $outfilenow
-    if rem(ix,floor(length(xi)/40)) == 0 % For 360 lons, save each 360/5 = 72 lons complete; 10 = 36 complete; 40 = 8 complete
+    if rem(ix,10) == 5 % For 181 lons, save each stepsize complete
         if ( strcmpi('larry',trim_host) || strcmpi('tracy',trim_host) || strcmpi('ingrid',trim_host) )
             outfile = ['/',trim_host,'1/dur041/',outfilenow,'_local_robust_',id_str,num2str(str_lvls),'pres',int2str(nobs),'.mat'];
         elseif ( strcmpi('c000573-hf',trim_host) || strcmpi('c000574-hf',trim_host) || strcmpi('c000674-hf',trim_host) || strcmpi('c000675-hf',trim_host) )
@@ -423,7 +423,8 @@ for ix = 1:length(xi) % for length(lon)
         save(outfile, 'sn', 'sres', 'sres2', 'sc', 'sce', 'scpvals', 'sxscale', 'syscale', 'smedtime', 'sxdatscale', 'sydatscale', 'smean', 'sstd');
         save(outfile, 'gamrfn', 'gamrfres', 'gamrfres2', 'gamrfc', 'gamrfce', 'gamrfcpvals', 'gamrfxscale', 'gamrfyscale', 'gamrfmedtime', 'gamrfxdatscale', 'gamrfydatscale', 'gamrfmean', 'gamrfstd', '-append');
         save(outfile, 'ptn', 'ptres', 'ptres2', 'ptc', 'ptce', 'ptcpvals', 'ptxscale', 'ptyscale', 'ptmedtime', 'ptxdatscale', 'ptydatscale', 'ptmean', 'ptstd', '-append');
-        save(outfile, 'pressure_levels', 'nobs', 'xscaleo', 'yscaleo', 'timespan', 'xi', 'yi', 'di','paramodel', 'iscc', 'wmax', 'timescan', '-append')
+        save(outfile, 'pressure_levels', 'nobs', 'xscaleo', 'yscaleo', 'xi', 'yi', 'di','paramodel', 'iscc', 'wmax', '-append');
+        save(outfile, 'timebin', 'timemid', 'timespan', 'timescan', '-append');
         save(outfile, 'a_host_longname', 'a_author', 'a_script_name', 'a_script_start_time', 'bad_data', 'gross_std_scan', '-append');
         save(outfile, 'a_gitHash', 'a_gitBranch', 'a_gitRemote', 'a_gitUrl', '-append');
         disp(['File: ',outfile,' complete - ix loop']);
@@ -447,7 +448,8 @@ end
 save(outfile, 'sn', 'sres', 'sres2', 'sc', 'sce', 'scpvals', 'sxscale', 'syscale', 'smedtime', 'sxdatscale', 'sydatscale', 'smean', 'sstd');
 save(outfile, 'gamrfn', 'gamrfres', 'gamrfres2', 'gamrfc', 'gamrfce', 'gamrfcpvals', 'gamrfxscale', 'gamrfyscale', 'gamrfmedtime', 'gamrfxdatscale', 'gamrfydatscale', 'gamrfmean', 'gamrfstd', '-append');
 save(outfile, 'ptn', 'ptres', 'ptres2', 'ptc', 'ptce', 'ptcpvals', 'ptxscale', 'ptyscale', 'ptmedtime', 'ptxdatscale', 'ptydatscale', 'ptmean', 'ptstd', '-append');
-save(outfile, 'pressure_levels', 'nobs', 'xscaleo', 'yscaleo', 'timespan', 'xi', 'yi', 'di','paramodel', 'iscc', 'wmax', 'timescan', '-append')
+save(outfile, 'pressure_levels', 'nobs', 'xscaleo', 'yscaleo', 'xi', 'yi', 'di','paramodel', 'iscc', 'wmax', '-append');
+save(outfile, 'timebin', 'timemid', 'timespan', 'timescan', '-append');
 process_time = toc; a_file_process_time = process_time/3600; % Record time taken to process this file in hour units
 save(outfile, 'a_host_longname', 'a_author', 'a_script_name', 'a_script_start_time', 'bad_data', 'gross_std_scan', 'a_matlab_version', 'a_multithread_num', 'a_file_process_time', '-append');
 save(outfile, 'a_gitHash', 'a_gitBranch', 'a_gitRemote', 'a_gitUrl', '-append');

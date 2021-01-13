@@ -136,7 +136,8 @@
 % PJD 19 Nov 2020   - Update to terminate from within script
 % PJD 23 Dec 2020   - Update for latest obs 201223; Added rmpath to cleanup links
 % PJD 23 Dec 2020   - Update SOI index (get_climind, and SOI inputs)
-% PJD 12 Jan 2020   - Correct a_script_name dob var #3
+% PJD 12 Jan 2021   - Correct a_script_name dob var #3
+% PJD 12 Jan 2021   - Log infile information #4
 
 warning off all % Suppress warning messages
 tic % Start timing script
@@ -260,8 +261,18 @@ bad_data = deal( NaN(4000000,4) ); bad_data_count = 1;
 di = NaN(length(xi),length(yi));
 
 %% Load latest input data into memory
-%load([arch_dir,'090408_pressurf_global_nodupes_exclude.mat'],'gamrf','s','pt','src','time_decimal','x','y','basin_nums'); % Trim down to components required only
-load([obs_dir,'201223_pressurf_global_nodupes_exclude.mat'],'gamrf','s','pt','time_decimal','x','y','basin_nums'); % Trim down to components required only
+a_infile = [obs_dir,'201223_pressurf_global_nodupes_exclude.mat'];
+load(a_infile,'gamrf','s','pt','time_decimal','x','y','basin_nums'); % Trim down to components required only
+% Validate through md5
+[~,infileMd5Str] = unix(['/usr/bin/md5sum ',infile]);
+a_infileMd5 = strsplit(infileMd5Str,' '); clear infileMd5Str
+[~,stat] = unix(['stat ',infile]);
+infileStat = strplit(stat); clear stat
+i = find(contains(strsplit(infileStat),'Modify'));
+a_infileModify = strjoin([infileStat{i+1};infileStat(i+2);infileStat{i+3}]); clear infileStat i
+% Trim data using timebin limits
+
+%% Load depth indices
 botdepth = -1*etopo2v2(y,x); % Replaced from topongdc
 
 %% Loop through lons
@@ -426,6 +437,7 @@ for ix = 1:length(xi) % for length(lon)
         save(outfile, 'pressure_levels', 'nobs', 'xscaleo', 'yscaleo', 'xi', 'yi', 'di','paramodel', 'iscc', 'wmax', '-append');
         save(outfile, 'timebin', 'timemid', 'timespan', 'timescan', '-append');
         save(outfile, 'a_host_longname', 'a_author', 'a_script_name', 'a_script_start_time', 'bad_data', 'gross_std_scan', '-append');
+        save(outfile, 'a_infile', 'a_infileMd5', 'a_infileModify', '-append')
         save(outfile, 'a_gitHash', 'a_gitBranch', 'a_gitRemote', 'a_gitUrl', '-append');
         disp(['File: ',outfile,' complete - ix loop']);
     end % rem(ix...
@@ -452,6 +464,7 @@ save(outfile, 'pressure_levels', 'nobs', 'xscaleo', 'yscaleo', 'xi', 'yi', 'di',
 save(outfile, 'timebin', 'timemid', 'timespan', 'timescan', '-append');
 process_time = toc; a_file_process_time = process_time/3600; % Record time taken to process this file in hour units
 save(outfile, 'a_host_longname', 'a_author', 'a_script_name', 'a_script_start_time', 'bad_data', 'gross_std_scan', 'a_matlab_version', 'a_multithread_num', 'a_file_process_time', '-append');
+save(outfile, 'a_infile', 'a_infileMd5', 'a_infileModify', '-append')
 save(outfile, 'a_gitHash', 'a_gitBranch', 'a_gitRemote', 'a_gitUrl', '-append');
 disp(['File: ',outfile,' complete - nobs loop']);
 

@@ -272,6 +272,9 @@ i = find(contains(strsplit(infileStat),'Modify'));
 a_infileModify = strjoin([infileStat{i+1};infileStat(i+2);infileStat{i+3}]); clear infileStat i
 % Trim data using timebin limits
 
+% Get data limits (time)
+a_infileTimeBounds = '';
+
 %% Load depth indices
 botdepth = -1*etopo2v2(y,x); % Replaced from topongdc
 

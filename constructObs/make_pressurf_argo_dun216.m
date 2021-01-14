@@ -44,6 +44,7 @@
 %                     and updated input
 % PJD 22 Dec 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/code/make_pressurf.m (110512) and updated input
 % PJD 23 Dec 2020   - Updating for latest input; Added rmpath to cleanup links
+% PJD 13 Jan 2021   - Updated for latest (complete 2020) data
 
 % Cleanup workspace and command window
 clear, clc, close all
@@ -77,7 +78,7 @@ a_matlab_version = a_matver; clear a_matver
 
 %% Load Jeff's latest file - on native levels
 %infile = os_path([data_dir,'observations/argo/argo_BOA_obs/argo_obs.mat']);
-infile = os_path([obs_dir,'Argo/CSIRO/201222/argo_obs.mat']);
+infile = os_path([obs_dir,'Argo/CSIRO/210113/argo_obs.mat']);
 load(infile)
 
 % On standard levels in depth, not pressure - csl3

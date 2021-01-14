@@ -138,6 +138,7 @@
 % PJD 23 Dec 2020   - Update SOI index (get_climind, and SOI inputs)
 % PJD 12 Jan 2021   - Correct a_script_name dob var #3
 % PJD 12 Jan 2021   - Log infile information #4
+% PJD 14 Jan 2021   - Updated for latest obs; Added timeBounds output vars
 
 warning off all % Suppress warning messages
 tic % Start timing script
@@ -167,6 +168,7 @@ a_script_name = [home_dir,script_name,'.m']; % Needs to be explicitly written
 a_script_start_time = [datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)];
 a_matlab_version = mat_version;
 % Find repo version
+cd(home_dir)
 a = getGitInfo;
 a_gitHash = a.hash;
 a_gitBranch = a.branch;
@@ -180,8 +182,6 @@ clear a
 
 % Create dynamic time component to outfilename, so that file overwrites don't occur
 outfilenow = regexprep([datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)],':','');
-id_str = ['195001to202012_FLRdouble_sptg_R2020bU3_detect','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
-
 if ( strcmpi('larry',trim_host) || strcmpi('tracy',trim_host) || strcmpi('ingrid',trim_host) )
     logfile = ['/',trim_host,'1/dur041/',outfilenow,'_',script_name,'.log'];
 elseif ( strcmpi('c000573-hf',trim_host) || strcmpi('c000574-hf',trim_host) || strcmpi('c000674-hf',trim_host) || strcmpi('c000675-hf',trim_host) )
@@ -189,9 +189,9 @@ elseif ( strcmpi('c000573-hf',trim_host) || strcmpi('c000574-hf',trim_host) || s
 elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || startsWith(trim_host,'crunchy') || startsWith(trim_host,'gates') )
     logfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis',outfilenow,'_',script_name,'.log'];
 else
-    logfile = [home_dir,outfilenow,'_',script_name,'.log'];
+    logfile = [home_dir,outfilenow,'_',script_name,'.log']; clear script_name
 end
-clear script_name
+cd(obs_dir)
 eval(['diary ',logfile])
 
 load([grab_dir,'pressure_levels.mat'], 'pressure_levels'); % Load index of pressure levels
@@ -211,10 +211,46 @@ str_lvls = length(isig); % Get length of levels to name output files
 %% Experiment with scale factors (window over which fitting occurs - spatial, time and gross data sampling/exclusion)
 %[Y, M, D, H, MN, S] = datevec(now); yearnow = Y;
 xscaleo = 2.0; yscaleo = 1.0; wmax = 0.2; nbinmin = 10; gross_std_scan = 5; lat_scan = 10; lon_scan = 25;
+
+%% Create time indexes and load latest data into memory
 % Create time indexes
 %timespan = 50.0; timemid = 1975; timebin = 1950:10:2010; timescan = 10; % Original
 timebin = 1950:10:2020; timescan = 10;
+timeStart = timebin(1); timeStart = 1800; timeEnd = 2021;
 timespan = timebin(end)-timebin(1); timemid = timebin(1) + timespan/2;
+% Create outfile id tag
+id_str = ['180001to202101_FLRdouble_sptg_R2020bU3_detect','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
+% Load data
+a_infile = [obs_dir,'210114_pressurf_global_nodupes_exclude.mat'];
+load(a_infile,'basin_nums','gamrf','pt','s','time_decimal','time_elements','x','y'); % Trim down to components required only
+% Validate through md5
+[~,infileMd5Str] = unix(['/usr/bin/md5sum ',a_infile]);
+a_infileMd5 = strsplit(infileMd5Str,' '); clear infileMd5Str
+a_infileMd5 = a_infileMd5{1};
+[~,stat] = unix(['stat ',a_infile]);
+infileStat = strsplit(stat); clear stat
+i = find(contains(infileStat,'Modify'));
+a_infileModify = strjoin([infileStat{i+1};infileStat(i+2);infileStat{i+3}]); clear infileStat i
+% Trim data using timebin limits
+[~,timeBeforeI] = find(time_decimal < timeStart);
+[~,timeAfterI] = find(time_decimal > timeEnd+1);
+timeOutBoundsI = [timeBeforeI,timeAfterI]; clear timeAfterI timeBeforeI
+basin_nums(:,timeOutBoundsI) = [];
+gamrf(:,timeOutBoundsI) = [];
+pt(:,timeOutBoundsI) = [];
+s(:,timeOutBoundsI) = [];
+time_decimal(:,timeOutBoundsI) = [];
+time_elements(:,timeOutBoundsI) = [];
+x(:,timeOutBoundsI) = [];
+y(:,timeOutBoundsI) = []; clear timeOutBoundsI
+% Get data limits (time)
+[timeFirst, timeFirstI] = min(time_decimal); [timeLast, timeLastI] = max(time_decimal); 
+infileTimeMin = time_elements(:,timeFirstI); clear timeFirstI
+infileTimeMax = time_elements(:,timeLastI); clear time_elements timeLastI timeFirst timeLast
+infileTimeMin = strjoin([strjoin(string(infileTimeMin(1:3)),'-'),strjoin(string(infileTimeMin(4:6)),':')]);
+infileTimeMax = strjoin([strjoin(string(infileTimeMax(1:3)),'-'),strjoin(string(infileTimeMax(4:6)),':')]);
+a_infileTimeBounds = strjoin([infileTimeMin,'; ',infileTimeMax],''); clear infileTimeMin infileTimeMax
+disp(['a_infileTimeBounds:',a_infileTimeBounds])
 
 %% Create parametric model of varying complexity
 % set the parametric local model:
@@ -259,21 +295,6 @@ end
 [ptc, ptce, ptcpvals] = deal( NaN(length(xi),length(yi),length(isig),paramodel_length) );
 bad_data = deal( NaN(4000000,4) ); bad_data_count = 1;
 di = NaN(length(xi),length(yi));
-
-%% Load latest input data into memory
-a_infile = [obs_dir,'201223_pressurf_global_nodupes_exclude.mat'];
-load(a_infile,'gamrf','s','pt','time_decimal','x','y','basin_nums'); % Trim down to components required only
-% Validate through md5
-[~,infileMd5Str] = unix(['/usr/bin/md5sum ',infile]);
-a_infileMd5 = strsplit(infileMd5Str,' '); clear infileMd5Str
-[~,stat] = unix(['stat ',infile]);
-infileStat = strplit(stat); clear stat
-i = find(contains(strsplit(infileStat),'Modify'));
-a_infileModify = strjoin([infileStat{i+1};infileStat(i+2);infileStat{i+3}]); clear infileStat i
-% Trim data using timebin limits
-
-% Get data limits (time)
-a_infileTimeBounds = '';
 
 %% Load depth indices
 botdepth = -1*etopo2v2(y,x); % Replaced from topongdc
@@ -440,7 +461,7 @@ for ix = 1:length(xi) % for length(lon)
         save(outfile, 'pressure_levels', 'nobs', 'xscaleo', 'yscaleo', 'xi', 'yi', 'di','paramodel', 'iscc', 'wmax', '-append');
         save(outfile, 'timebin', 'timemid', 'timespan', 'timescan', '-append');
         save(outfile, 'a_host_longname', 'a_author', 'a_script_name', 'a_script_start_time', 'bad_data', 'gross_std_scan', '-append');
-        save(outfile, 'a_infile', 'a_infileMd5', 'a_infileModify', '-append')
+        save(outfile, 'a_infile', 'a_infileMd5', 'a_infileModify', 'a_infileTimeBounds', '-append');
         save(outfile, 'a_gitHash', 'a_gitBranch', 'a_gitRemote', 'a_gitUrl', '-append');
         disp(['File: ',outfile,' complete - ix loop']);
     end % rem(ix...
@@ -467,7 +488,7 @@ save(outfile, 'pressure_levels', 'nobs', 'xscaleo', 'yscaleo', 'xi', 'yi', 'di',
 save(outfile, 'timebin', 'timemid', 'timespan', 'timescan', '-append');
 process_time = toc; a_file_process_time = process_time/3600; % Record time taken to process this file in hour units
 save(outfile, 'a_host_longname', 'a_author', 'a_script_name', 'a_script_start_time', 'bad_data', 'gross_std_scan', 'a_matlab_version', 'a_multithread_num', 'a_file_process_time', '-append');
-save(outfile, 'a_infile', 'a_infileMd5', 'a_infileModify', '-append')
+save(outfile, 'a_infile', 'a_infileMd5', 'a_infileModify', 'a_infileTimeBounds', '-append');
 save(outfile, 'a_gitHash', 'a_gitBranch', 'a_gitRemote', 'a_gitUrl', '-append');
 disp(['File: ',outfile,' complete - nobs loop']);
 

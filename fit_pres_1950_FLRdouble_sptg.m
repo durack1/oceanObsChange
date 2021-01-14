@@ -139,6 +139,7 @@
 % PJD 12 Jan 2021   - Correct a_script_name dob var #3
 % PJD 12 Jan 2021   - Log infile information #4
 % PJD 14 Jan 2021   - Updated for latest obs; Added timeBounds output vars
+% PJD 14 Jan 2021   - Run series of tests: start 1800, 1950, 1970; end 2021, 2020, 2019
 
 warning off all % Suppress warning messages
 tic % Start timing script
@@ -215,11 +216,11 @@ xscaleo = 2.0; yscaleo = 1.0; wmax = 0.2; nbinmin = 10; gross_std_scan = 5; lat_
 %% Create time indexes and load latest data into memory
 % Create time indexes
 %timespan = 50.0; timemid = 1975; timebin = 1950:10:2010; timescan = 10; % Original
-timebin = 1950:10:2020; timescan = 10;
+timebin = 1970:10:2020; timescan = 10;
 timeStart = timebin(1); timeEnd = 2021;
 timespan = timebin(end)-timebin(1); timemid = timebin(1) + timespan/2;
 % Create outfile id tag
-id_str = ['195001to202101_FLRdouble_sptg_R2020bU3_detect','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
+id_str = ['197001to202101_FLRdouble_sptg_R2020bU3_detect','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
 % Load data
 a_infile = [obs_dir,'210114_pressurf_global_nodupes_exclude.mat'];
 load(a_infile,'basin_nums','gamrf','pt','s','time_decimal','time_elements','x','y'); % Trim down to components required only

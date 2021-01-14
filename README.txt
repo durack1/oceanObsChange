@@ -1,3 +1,9 @@
+Thu 14 Jan 2021 01:02:16 PM PST
+
+Run in batch mode, latest command (R2020b)
+(base) bash-4.2$ ~/apps/MATLAB/R2020b/bin/matlab -batch "fit_pres_1950_FLRdouble_sptg" > /work/durack1/Shared/200428_data_OceanObsAnalysis/210114_1302_matlab9p9U3-detect.log
+
+
 Sat 09 Jan 2021 09:21:48 PM PST
 
 Run in batch mode, script with argument(s)

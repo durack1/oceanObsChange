@@ -187,7 +187,7 @@ if ( strcmpi('larry',trim_host) || strcmpi('tracy',trim_host) || strcmpi('ingrid
 elseif ( strcmpi('c000573-hf',trim_host) || strcmpi('c000574-hf',trim_host) || strcmpi('c000674-hf',trim_host) || strcmpi('c000675-hf',trim_host) )
     logfile = ['/work/dur041/',outfilenow,'_',script_name,'.log'];
 elseif ( startsWith(trim_host,'detect') || startsWith(trim_host,'oceanonly') || startsWith(trim_host,'crunchy') || startsWith(trim_host,'gates') )
-    logfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis',outfilenow,'_',script_name,'.log'];
+    logfile = ['/work/durack1/Shared/200428_data_OceanObsAnalysis/',outfilenow,'_',script_name,'.log'];
 else
     logfile = [home_dir,outfilenow,'_',script_name,'.log']; clear script_name
 end
@@ -244,7 +244,7 @@ time_elements(:,timeOutBoundsI) = [];
 x(:,timeOutBoundsI) = [];
 y(:,timeOutBoundsI) = []; clear timeOutBoundsI
 % Get data limits (time)
-[timeFirst, timeFirstI] = min(time_decimal); [timeLast, timeLastI] = max(time_decimal); 
+[timeFirst, timeFirstI] = min(time_decimal); [timeLast, timeLastI] = max(time_decimal);
 infileTimeMin = time_elements(:,timeFirstI); clear timeFirstI
 infileTimeMax = time_elements(:,timeLastI); clear time_elements timeLastI timeFirst timeLast
 infileTimeMin = strjoin([strjoin(string(infileTimeMin(1:3)),'-'),strjoin(string(infileTimeMin(4:6)),':')]);

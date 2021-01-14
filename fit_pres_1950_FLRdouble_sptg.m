@@ -139,7 +139,9 @@
 % PJD 12 Jan 2021   - Correct a_script_name dob var #3
 % PJD 12 Jan 2021   - Log infile information #4
 % PJD 14 Jan 2021   - Updated for latest obs; Added timeBounds output vars
+% PJD 14 Jan 2021   - Cleanup script_name identifier
 % PJD 14 Jan 2021   - Run series of tests: start 1800, 1950, 1970; end 2021, 2020, 2019
+% PJD 14 Jan 2021   - Cleanup scriptname identifier; Rename file (removing 1950)
 
 warning off all % Suppress warning messages
 tic % Start timing script
@@ -159,12 +161,12 @@ trim_host = strtrim(hostname);
 a_host_longname = getenv('HOSTNAME');
 % Specify file author name
 a_author = 'pauldurack@llnl.gov; +1 925 422 5208; Lawrence Livermore National Laboratory, Livermore, California, USA';
-% Obtain this scriptname and time initialised
-script_name = 'fit_pres_1950_FLRdouble_sptg_200913';
 home_dir = '/export/durack1/git/oceanObs/';
 %arch_dir = '/work/durack1/Shared/090605_FLR2_sptg/'; % Original data source
 obs_dir = '/work/durack1/Shared/200428_data_OceanObsAnalysis/';
 grab_dir = '/work/durack1/Shared/';
+% Obtain this scriptname and time initialised
+script_name = 'fit_pres_1950_FLRdouble_sptg';
 a_script_name = [home_dir,script_name,'.m']; % Needs to be explicitly written
 a_script_start_time = [datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)];
 a_matlab_version = mat_version;
@@ -174,8 +176,7 @@ a = getGitInfo;
 a_gitHash = a.hash;
 a_gitBranch = a.branch;
 a_gitRemote = a.remote;
-a_gitUrl = a.url;
-clear a
+a_gitUrl = a.url; clear a
 
 %% As this version is running within an interactive console, grab output to a log file
 % - Catch and clear memory if script fails

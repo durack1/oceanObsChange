@@ -222,7 +222,7 @@ timebin = 1950:10:2020; timescan = 10;
 timeStart = timebin(1); timeStart = 1800; timeEnd = 2020;
 timespan = timebin(end)-timebin(1); timemid = timebin(1) + timespan/2;
 % Create outfile id tag
-id_str = ['180001to202101_FLRdouble_sptg_R2020bU3_detect','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
+id_str = ['180001to202001_FLRdouble_sptg_R2020bU3_detect','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
 % Load data
 a_infile = [obs_dir,'210114_pressurf_global_nodupes_exclude.mat'];
 load(a_infile,'basin_nums','gamrf','pt','s','time_decimal','time_elements','x','y'); % Trim down to components required only

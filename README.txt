@@ -1,3 +1,13 @@
+Thu 14 Jan 2021 08:05:04 PM PST
+
+~/apps/MATLAB/R2020b/bin/matlab -batch "fit_pres_FLRdouble_sptg" > /work/durack1/Shared/200428_data_OceanObsAnalysis/210114_1954-180001-202101_matlab9p9U3-detect.log
+~/apps/MATLAB/R2020b/bin/matlab -batch "fit_pres_FLRdouble_sptg" > /work/durack1/Shared/200428_data_OceanObsAnalysis/210114_1956-180001-202001_matlab9p9U3-detect.log
+~/apps/MATLAB/R2020b/bin/matlab -batch "fit_pres_FLRdouble_sptg" > /work/durack1/Shared/200428_data_OceanObsAnalysis/210114_1958-195001-202101_matlab9p9U3-detect.log
+~/apps/MATLAB/R2020b/bin/matlab -batch "fit_pres_FLRdouble_sptg" > /work/durack1/Shared/200428_data_OceanObsAnalysis/210114_1959-197001-202101_matlab9p9U3-detect.log
+~/apps/MATLAB/R2020b/bin/matlab -batch "fit_pres_FLRdouble_sptg" > /work/durack1/Shared/200428_data_OceanObsAnalysis/210114_2001-195001-201912_matlab9p9U3-detect.log
+~/apps/MATLAB/R2020b/bin/matlab -batch "fit_pres_FLRdouble_sptg" > /work/durack1/Shared/200428_data_OceanObsAnalysis/210114_2003-197001-201912_matlab9p9U3-detect.log
+
+
 Thu 14 Jan 2021 01:02:16 PM PST
 
 Run in batch mode, latest command (R2020b)

@@ -142,6 +142,7 @@
 % PJD 14 Jan 2021   - Cleanup script_name identifier
 % PJD 14 Jan 2021   - Run series of tests: start 1800, 1950, 1970; end 2021, 2020, 2019
 % PJD 14 Jan 2021   - Cleanup scriptname identifier; Rename file (removing 1950)
+% PJD 14 Jan 2021   - Renamed fit_pres_1950_FLRdouble_sptg.m -> fit_pres_FLRdouble_sptg.m
 
 warning off all % Suppress warning messages
 tic % Start timing script
@@ -166,7 +167,7 @@ home_dir = '/export/durack1/git/oceanObs/';
 obs_dir = '/work/durack1/Shared/200428_data_OceanObsAnalysis/';
 grab_dir = '/work/durack1/Shared/';
 % Obtain this scriptname and time initialised
-script_name = 'fit_pres_1950_FLRdouble_sptg';
+script_name = 'fit_pres_FLRdouble_sptg';
 a_script_name = [home_dir,script_name,'.m']; % Needs to be explicitly written
 a_script_start_time = [datestr(now,11),datestr(now,5),datestr(now,7),'_',datestr(now,13)];
 a_matlab_version = mat_version;

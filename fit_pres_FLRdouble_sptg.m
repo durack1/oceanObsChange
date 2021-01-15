@@ -218,11 +218,11 @@ xscaleo = 2.0; yscaleo = 1.0; wmax = 0.2; nbinmin = 10; gross_std_scan = 5; lat_
 %% Create time indexes and load latest data into memory
 % Create time indexes
 %timespan = 50.0; timemid = 1975; timebin = 1950:10:2010; timescan = 10; % Original
-timebin = 1970:10:2020; timescan = 10;
-timeStart = timebin(1); timeEnd = 2020;
+timebin = 1950:10:2020; timescan = 10;
+timeStart = timebin(1); timeStart = 1800; timeEnd = 2020;
 timespan = timebin(end)-timebin(1); timemid = timebin(1) + timespan/2;
 % Create outfile id tag
-id_str = ['197001to202012_FLRdouble_sptg_R2020bU3_detect','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
+id_str = ['180001to202101_FLRdouble_sptg_R2020bU3_detect','_']; % Include any specific identifiers you'd like in output filename in-between the first '' pair
 % Load data
 a_infile = [obs_dir,'210114_pressurf_global_nodupes_exclude.mat'];
 load(a_infile,'basin_nums','gamrf','pt','s','time_decimal','time_elements','x','y'); % Trim down to components required only

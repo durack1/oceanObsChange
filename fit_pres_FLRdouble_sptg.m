@@ -143,6 +143,7 @@
 % PJD 14 Jan 2021   - Run series of tests: start 1800, 1950, 1970; end 2021, 2020, 2019
 % PJD 14 Jan 2021   - Cleanup scriptname identifier; Rename file (removing 1950)
 % PJD 14 Jan 2021   - Renamed fit_pres_1950_FLRdouble_sptg.m -> fit_pres_FLRdouble_sptg.m
+% PJD TO-DO         - Add start/end years as arguments written in logs for identification
 
 warning off all % Suppress warning messages
 tic % Start timing script

@@ -143,6 +143,7 @@
 % PJD 14 Jan 2021   - Run series of tests: start 1800, 1950, 1970; end 2021, 2020, 2019
 % PJD 14 Jan 2021   - Cleanup scriptname identifier; Rename file (removing 1950)
 % PJD 14 Jan 2021   - Renamed fit_pres_1950_FLRdouble_sptg.m -> fit_pres_FLRdouble_sptg.m
+% PJD 20 Jan 2021   - WORKING: Add process stats to outfile
 % PJD TO-DO         - Add start/end years as arguments written in logs for identification
 
 warning off all % Suppress warning messages
@@ -504,6 +505,16 @@ pack % Attempt to reduce memory usage
 script_time = toc; script_process_time = script_time/3600;
 disp(['Script process time: ',num2str(script_process_time),' hours - multithreadnum = ',num2str(a_multithread_num)])
 
+% Grab process stats and save to outfile
+[~,b] = unix(['ps -fp ',num2str(pid)]);
+statBits = strsplit(b);
+ans =
+  1×19 cell array
+  Columns 1 through 13
+    {'UID'}    {'PID'}    {'PPID'}    {'C'}    {'STIME'}    {'TTY'}    {'TIME'}    {'CMD'}    {'durack1'}    {'89782'}    {'54182'}    {'22'}    {'16:25'}
+  Columns 14 through 19
+    {'pts/20'}    {'00:01:01'}    {'/export/durack1…'}    {'-nosplash'}    {'-prefersoftware…'}    {0×0 char}
+    
 clear % Return resident memory to the system
 diary off % Close diary file and release file handle
 

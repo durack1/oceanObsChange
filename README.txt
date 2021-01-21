@@ -1,3 +1,11 @@
+Tue 19 Jan 2021 04:06:31 PM PST
+
+Process new runs for evaluation
+(base) bash-4.2$ date
+Tue Jan 19 16:06:01 PST 2021
+(base) bash-4.2$ ~/apps/MATLAB/R2020b/bin/matlab -batch "cd('/export/durack1/git/oceanObs/evaluate');make_levels('/work/durack1/Shared/200428_data_OceanObsAnalysis/210114_200303_local_robust_197001to201912_FLRdouble_sptg_R2020bU3_detect_79pres1000.mat');"
+
+
 Thu 14 Jan 2021 08:05:04 PM PST
 
 ~/apps/MATLAB/R2020b/bin/matlab -batch "fit_pres_FLRdouble_sptg" > /work/durack1/Shared/200428_data_OceanObsAnalysis/210114_1954-180001-202101_matlab9p9U3-detect.log

@@ -63,6 +63,7 @@ function make_nc(infile)
 %}
 % PJD 10 Jan 2021   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/090605_FLR2_sptg/make_nc.m (110801)
 %                     and updated input
+% PJD 21 Jan 2021   - WORKING: Update to use a_infile* and time* variables in metadata creation https://github.com/durack1/oceanObs/issues/11
 
 % make_nc.m
 
@@ -100,9 +101,13 @@ if nargin == 1
 end % nargin == 1
 
 %% Create strings for data labels - when updated read from file
+
+% Use a_infile* and time* variables to create these strings
+
 timeYrs     = '70yrs'; %'50yrs';
 timeWindow  = '1950-2020'; %'1950-2000';
 timeEnd     = '2020-12-11'; %'2009-04-04';
+climBndsStart = '';
 climBndsEnd = '2020-12-31';
 timeStop    = timeEnd(1:4);
 include_density = 0;

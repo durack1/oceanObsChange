@@ -143,7 +143,7 @@
 % PJD 14 Jan 2021   - Run series of tests: start 1800, 1950, 1970; end 2021, 2020, 2019
 % PJD 14 Jan 2021   - Cleanup scriptname identifier; Rename file (removing 1950)
 % PJD 14 Jan 2021   - Renamed fit_pres_1950_FLRdouble_sptg.m -> fit_pres_FLRdouble_sptg.m
-% PJD 20 Jan 2021   - WORKING: Add process stats to outfile
+% PJD 21 Jan 2021   - Add process stats to outfile (a_proc*)
 % PJD TO-DO         - Add start/end years as arguments written in logs for identification
 
 warning off all % Suppress warning messages
@@ -497,8 +497,6 @@ save(outfile, 'a_infile', 'a_infileMd5', 'a_infileModify', 'a_infileTimeBounds',
 save(outfile, 'a_gitHash', 'a_gitBranch', 'a_gitRemote', 'a_gitUrl', '-append');
 disp(['File: ',outfile,' complete - nobs loop']);
 
-pack % Attempt to reduce memory usage
-
 %% End write output files
 
 % Report time taken to finish script
@@ -506,15 +504,15 @@ script_time = toc; script_process_time = script_time/3600;
 disp(['Script process time: ',num2str(script_process_time),' hours - multithreadnum = ',num2str(a_multithread_num)])
 
 % Grab process stats and save to outfile
-[~,b] = unix(['ps -fp ',num2str(pid)]);
-statBits = strsplit(b);
-ans =
-  1×19 cell array
-  Columns 1 through 13
-    {'UID'}    {'PID'}    {'PPID'}    {'C'}    {'STIME'}    {'TTY'}    {'TIME'}    {'CMD'}    {'durack1'}    {'89782'}    {'54182'}    {'22'}    {'16:25'}
-  Columns 14 through 19
-    {'pts/20'}    {'00:01:01'}    {'/export/durack1…'}    {'-nosplash'}    {'-prefersoftware…'}    {0×0 char}
-    
+[~,b] = unix(['ps -Fp ',num2str(feature('getpid'))]); % 5 grab SZ/virtual mem use; 6 RSS/real memory use; 8 STIME/start time; 10 TIME/total CPU usage
+statBits = strsplit(b); clear b
+disp(statBits([5,6,8,10])); disp(statBits([16,17,19,21]))
+a_procVirtMem = statBits(16);
+a_procRealMem = statBits(17);
+a_procStartTime = statBits(19);
+a_procCPUTime = statBits(21); clear statBits
+save(outfile, 'a_procVirtMem', 'a_procRealMem', 'a_procStartTime', 'a_procCPUTime', '-append');
+
 clear % Return resident memory to the system
 diary off % Close diary file and release file handle
 

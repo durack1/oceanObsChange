@@ -65,6 +65,7 @@ function make_nc(infile)
 %                     and updated input
 % PJD 22 Jan 2021   - Turned on standard_name writing, all registered https://cfconventions.org/Data/cf-standard-names/77/build/cf-standard-name-table.html
 % PJD 22 Jan 2021   - Update to use a_infile* and time* variables in metadata creation https://github.com/durack1/oceanObs/issues/11
+% PJD 22 Jan 2021   - Updated netcdf version global attribute 1.0.0 -> 1.1.0
 
 % make_nc.m
 
@@ -472,7 +473,7 @@ attIdGlobal = netcdf.getConstant('NC_GLOBAL');
 netcdf.putAtt(ncid,attIdGlobal,'Conventions','CF-1.7');
 netcdf.putAtt(ncid,attIdGlobal,'title',['Observed Global Ocean property changes for the 20th and 21st Centuries ',timeWindow]);
 netcdf.putAtt(ncid,attIdGlobal,'institution','Program for Climate Model Diagnosis and Intercomparison, LLNL, Livermore, CA, USA');
-netcdf.putAtt(ncid,attIdGlobal,'version','1.2.0; Beta - pre-release data');
+netcdf.putAtt(ncid,attIdGlobal,'version','1.1.0; Beta - pre-release data');
 netcdf.putAtt(ncid,attIdGlobal,'contact',['Paul J. Durack; pauldurack@llnl.gov (',username,'); +1 925 422 5208']);
 netcdf.putAtt(ncid,attIdGlobal,'datafile',char(a_infile));
 netcdf.putAtt(ncid,attIdGlobal,'datafile_md5',char(a_infileMd5));

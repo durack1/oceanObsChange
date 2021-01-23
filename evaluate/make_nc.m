@@ -63,7 +63,8 @@ function make_nc(infile)
 %}
 % PJD 10 Jan 2021   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/090605_FLR2_sptg/make_nc.m (110801)
 %                     and updated input
-% PJD 21 Jan 2021   - WORKING: Update to use a_infile* and time* variables in metadata creation https://github.com/durack1/oceanObs/issues/11
+% PJD 22 Jan 2021   - Turned on standard_name writing, all registered https://cfconventions.org/Data/cf-standard-names/77/build/cf-standard-name-table.html
+% PJD 22 Jan 2021   - Update to use a_infile* and time* variables in metadata creation https://github.com/durack1/oceanObs/issues/11
 
 % make_nc.m
 
@@ -107,28 +108,29 @@ end % nargin == 1
 load(infile, ...
      'a_file_process_time','a_gitHash','a_host_longname','a_infile','a_infileMd5','a_infileModify', ...
      'a_infileTimeBounds','a_matlab_version','a_script_name','a_script_start_time', ...
-     'timebin','timemid','timescan','timespan', ...
+     'timebin','timespan', ...
      'pressure_levels','xi','yi', ...
      'ptc','ptce','ptmean','sc','sce','smean','gamrfc','gamrfce','gamrfmean'); %, ...
-     %'sxdatscale','sydatscale');
+     %'sxdatscale','sydatscale','timemid','timescan',);
 
-%% Create strings for data labels - when updated read from file
-
-% Use a_infile* and time* variables to create these strings
-%infile = '/work/durack1/Shared/200428_data_OceanObsAnalysis/210114_200121_local_robust_195001to201912_FLRdouble_sptg_R2020bU3_detect_79pres1000.mat'
-timeYrs         = [num2str(timespan),'yrs']; clear timespan %'70yrs'; '50yrs';
-%timeEnd         = '2020-12-11'; %'2009-04-04';
+%% Create strings for data labels - read from infile
+timeYrs         = [num2str(timespan),'yrs']; clear timespan
 clim            = strsplit(a_infileTimeBounds,';'); clear a_infileTimeBounds
 climBndsStart   = strtok(clim{1});
-climBndsEnd     = strtok(clim{2}); clear clim %'2020-12-31';
+climBndsEnd     = strtok(clim{2}); clear clim
 timeStart       = [num2str(timebin(1)),'0101']; clear timebin
-timeStop        = [climBndsEnd(1:4),'1231'];
-timeWindow      = [timeStart,'-',timeStop]; %'1950-2020'; '1950-2000';
+if datestr(now,10) == climBndsEnd(1:4) % Catch case of current year
+    timeBits = strsplit(climBndsEnd,'-');
+    yr = timeBits{1};
+    mn = num2str(str2double(timeBits{2}),'%02d');
+    da = num2str(str2double(timeBits{end}),'%02d');
+    timeStop        = [yr,mn,da];
+else
+    timeStop        = [climBndsEnd(1:4),'1231'];
+end
+timeWindow      = [timeStart,'-',timeStop];
 
 %% If running through entire script cleanup export files
-%dataDir = os_path('090605_FLR2_sptg/');
-%data_infile = '090605_190300_local_robust_1950_FLRdouble_sptg_79pres1000_v7.mat';
-%infile = [homeDir,dataDir,data_infile];
 infile = char(fullfile(outPath,[name,ext]));
 timeNow = [datestr(now,11),datestr(now,5),datestr(now,7),'-',datestr(now,13)];
 outFile = (char(fullfile(outPath,['DurackandWijffels_GlobalOceanChanges_',timeWindow,'__', ...
@@ -402,7 +404,7 @@ netcdf.putAtt(ncid,var_pt_chg_id,'comment',['Error threshold: ',num2str(pt_thres
 var_pt_chg_err_id = netcdf.defVar(ncid,'thetao_change_error','float',[dimIdLon,dimIdLat,dimIdDepth,dimIdTime]);
 netcdf.putAtt(ncid,var_pt_chg_err_id,'units',['degree_C/',timeYrs])
 netcdf.putAtt(ncid,var_pt_chg_err_id,'long_name',['Potential Temperature change error ',timeWindow])
-%netcdf.putAtt(ncid,var_pt_chg_err_id,'standard_name','change_over_time_in_sea_water_potential_temperature_error')
+netcdf.putAtt(ncid,var_pt_chg_err_id,'standard_name','change_over_time_in_sea_water_potential_temperature_error')
 netcdf.putAtt(ncid,var_pt_chg_err_id,'_FillValue',single(1.0e+20))
 netcdf.putAtt(ncid,var_pt_chg_err_id,'missing_value',single(1.0e+20))
 netcdf.putAtt(ncid,var_pt_chg_err_id,'comment','  ')
@@ -410,7 +412,7 @@ var_s_mean_id = netcdf.defVar(ncid,'salinity_mean','float',[dimIdLon,dimIdLat,di
 netcdf.putAtt(ncid,var_s_mean_id,'units','1e-3')
 netcdf.putAtt(ncid,var_s_mean_id,'units_long','PSS-78')
 netcdf.putAtt(ncid,var_s_mean_id,'long_name',['Salinity mean ',timeWindow])
-%netcdf.putAtt(ncid,var_s_mean_id,'standard_name','sea_water_practical_salinity')
+netcdf.putAtt(ncid,var_s_mean_id,'standard_name','sea_water_practical_salinity')
 netcdf.putAtt(ncid,var_s_mean_id,'standard_name','sea_water_salinity')
 netcdf.putAtt(ncid,var_s_mean_id,'_FillValue',single(1.0e+20))
 netcdf.putAtt(ncid,var_s_mean_id,'missing_value',single(1.0e+20))
@@ -421,7 +423,7 @@ var_s_chg_id = netcdf.defVar(ncid,'salinity_change','float',[dimIdLon,dimIdLat,d
 netcdf.putAtt(ncid,var_s_chg_id,'units',['1e-3/',timeYrs])
 netcdf.putAtt(ncid,var_s_chg_id,'units_long',['PSS-78/',timeYrs])
 netcdf.putAtt(ncid,var_s_chg_id,'long_name',['Salinity change ',timeWindow])
-%netcdf.putAtt(ncid,var_s_chg_id,'standard_name','change_over_time_in_sea_water_practical_salinity')
+netcdf.putAtt(ncid,var_s_chg_id,'standard_name','change_over_time_in_sea_water_practical_salinity')
 netcdf.putAtt(ncid,var_s_chg_id,'standard_name','change_over_time_in_sea_water_salinity')
 netcdf.putAtt(ncid,var_s_chg_id,'_FillValue',single(1.0e+20))
 netcdf.putAtt(ncid,var_s_chg_id,'missing_value',single(1.0e+20))
@@ -431,7 +433,7 @@ var_s_chg_err_id = netcdf.defVar(ncid,'salinity_change_error','float',[dimIdLon,
 netcdf.putAtt(ncid,var_s_chg_err_id,'units',['1e-3/',timeYrs])
 netcdf.putAtt(ncid,var_s_chg_err_id,'units_long',['PSS-78/',timeYrs])
 netcdf.putAtt(ncid,var_s_chg_err_id,'long_name',['Salinity change error ',timeWindow])
-%netcdf.putAtt(ncid,var_s_chg_err_id,'standard_name','change_over_time_in_sea_water_practical_salinity_error')
+netcdf.putAtt(ncid,var_s_chg_err_id,'standard_name','change_over_time_in_sea_water_practical_salinity_error')
 netcdf.putAtt(ncid,var_s_chg_err_id,'_FillValue',single(1.0e+20))
 netcdf.putAtt(ncid,var_s_chg_err_id,'missing_value',single(1.0e+20))
 netcdf.putAtt(ncid,var_s_chg_err_id,'comment','  ')
@@ -459,7 +461,7 @@ if include_density
     netcdf.putAtt(ncid,var_g_chg_err_id,'units',['kg m-3/',timeYrs])
     netcdf.putAtt(ncid,var_g_chg_err_id,'units_long',['kg m-3/',timeYrs])
     netcdf.putAtt(ncid,var_g_chg_err_id,'long_name',['Density change error ',timeWindow])
-    %netcdf.putAtt(ncid,var_g_chg_err_id,'standard_name','change_over_time_in_sea_water_neutral_density_error')
+    netcdf.putAtt(ncid,var_g_chg_err_id,'standard_name','change_over_time_in_sea_water_neutral_density_error')
     netcdf.putAtt(ncid,var_g_chg_err_id,'_FillValue',single(1.0e+20))
     netcdf.putAtt(ncid,var_g_chg_err_id,'missing_value',single(1.0e+20))
     netcdf.putAtt(ncid,var_g_chg_err_id,'comment','  ')
@@ -472,17 +474,17 @@ netcdf.putAtt(ncid,attIdGlobal,'title',['Observed Global Ocean property changes 
 netcdf.putAtt(ncid,attIdGlobal,'institution','Program for Climate Model Diagnosis and Intercomparison, LLNL, Livermore, CA, USA');
 netcdf.putAtt(ncid,attIdGlobal,'version','1.2.0; Beta - pre-release data');
 netcdf.putAtt(ncid,attIdGlobal,'contact',['Paul J. Durack; pauldurack@llnl.gov (',username,'); +1 925 422 5208']);
+netcdf.putAtt(ncid,attIdGlobal,'datafile',char(a_infile));
+netcdf.putAtt(ncid,attIdGlobal,'datafile_md5',char(a_infileMd5));
+netcdf.putAtt(ncid,attIdGlobal,'datafile_modTime',char(a_infileModify));
 netcdf.putAtt(ncid,attIdGlobal,'sourcefile',infile);
 % Validate through md5
 [~,infileMd5Str] = unix(['/usr/bin/md5sum ',infile]);
 infileMd5 = strsplit(infileMd5Str,' ');
 netcdf.putAtt(ncid,attIdGlobal,'sourcefile_md5',char(infileMd5(1)));
-netcdf.putAtt(ncid,attIdGlobal,'datafile',char(a_infile));
-netcdf.putAtt(ncid,attIdGlobal,'datafile_md5',char(a_infileMd5));
-netcdf.putAtt(ncid,attIdGlobal,'datafile_modTime',char(a_infileModify));
 % fix a_script_name
-a_script_name = strrep(a_script_name,'//','/')
-a_gitHash = ['github.com/durack1/oceanObs/commit/',a_gitHash]
+a_script_name = strrep(a_script_name,'//','/');
+a_gitHash = ['github.com/durack1/oceanObs/commit/',a_gitHash];
 netcdf.putAtt(ncid,attIdGlobal,'sourcefile_atts',[['script_name: ',a_script_name,10], ...
                                                   ['git_hash: ',a_gitHash,10], ...
                                                   ['host_longname: ',a_host_longname,10], ...
@@ -490,7 +492,6 @@ netcdf.putAtt(ncid,attIdGlobal,'sourcefile_atts',[['script_name: ',a_script_name
                                                   ['start_time: ',a_script_start_time,10], ...
                                                   ['process_time: ',num2str(a_file_process_time)]]);
 [~,timestr] = unix('date --utc +%d-%b-%Y\ %X');
-%netcdf.putAtt(ncid,attIdGlobal,'history',[regexprep(timestr,'\r\n|\n|\r',''),' UTC; Hobart, TAS, Australia']);
 netcdf.putAtt(ncid,attIdGlobal,'history',[regexprep(timestr,'\r\n|\n|\r',''),' UTC; Livermore, California, USA']);
 hoststr = [aHostLongname,'; Matlab Version: ',version];
 netcdf.putAtt(ncid,attIdGlobal,'host',hoststr);

@@ -1,3 +1,8 @@
+Mon 25 Jan 2021 05:19:48 PM PST
+
+Consider CoTeDe for obs QC steps, see https://github.com/IQuOD/AutoQC/pull/261
+
+
 Tue 19 Jan 2021 04:06:31 PM PST
 
 Process new runs for evaluation

@@ -66,6 +66,7 @@ function make_nc(infile)
 % PJD 22 Jan 2021   - Turned on standard_name writing, all registered https://cfconventions.org/Data/cf-standard-names/77/build/cf-standard-name-table.html
 % PJD 22 Jan 2021   - Update to use a_infile* and time* variables in metadata creation https://github.com/durack1/oceanObs/issues/11
 % PJD 22 Jan 2021   - Updated netcdf version global attribute 1.0.0 -> 1.1.0
+% PJD  9 Feb 2021   - Updated to generate nc from old file versions (no infile/time/git attributes)
 
 % make_nc.m
 
@@ -130,6 +131,54 @@ else
     timeStop        = [climBndsEnd(1:4),'1231'];
 end
 timeWindow      = [timeStart,'-',timeStop];
+
+%% Create string for data labels - in case of old files hard-code
+% All runs from 200913 to 201105 (which don't include file variables) - see /work/durack1/Shared/200428_data_OceanObsAnalysis
+% 210114 R2020bU3 run with 2021 data/AR6 1950-2019 analysis
+%{
+load('/work/durack1/Shared/200428_data_OceanObsAnalysis/210114_200121_local_robust_195001to201912_FLRdouble_sptg_R2020bU3_detect_79pres1000.mat')
+Ref: https://github.com/durack1/oceanObs/blob/64625fdb225cb8d594e8073d17a4b10be267d800/fit_pres_1950_FLRdouble_sptg.m
+%}
+% 200913 R2020a run with original 090408 data
+%{
+%load('/work/durack1/Shared/200428_data_OceanObsAnalysis/200913_210216_local_robust_1950_FLRdouble_sptg_200913_79pres1000.mat')
+%Ref: https://github.com/durack1/oceanObs/blob/64625fdb225cb8d594e8073d17a4b10be267d800/fit_pres_1950_FLRdouble_sptg.m
+%load('/work/durack1/Shared/090605_FLR2_sptg/090408_pressurf_global_nodupes_exclude.mat')
+%[~,indMin] = min(time_decimal); [~,indMax] = max(time_decimal);
+%disp(time_elements(:,indMin)'), disp(time_elements(:,indMax)')
+timeYrs = 59; % 1950-2008
+clim = strsplit('1874-10-11 0:0:0; 2009-04-04 02:34:27',';');
+climBndsStart   = strtok(clim{1});
+climBndsEnd     = strtok(clim{2}); clear clim
+timebin         = 1950:10:2010;
+timeStart       = [num2str(timebin(1)),'0101']; clear timebin
+timeStop        = [climBndsEnd(1:4),'0404']; %'1231'];
+timeWindow      = [timeStart,'-',timeStop,'-200913-R2020a'];
+a_infile        = '/work/durack1/Shared/090605_FLR2_sptg/090408_pressurf_global_nodupes_exclude.mat';
+a_infileMd5     = 'f8c9b93250d6d9a1d990d17fcbcf541a';
+a_infileModify  = '2012-03-24 17:51:03.000000000 -0700';
+a_gitHash       = 'github.com/durack1/oceanObs/blob/64625fdb225cb8d594e8073d17a4b10be267d800/fit_pres_1950_FLRdouble_sptg.m';
+%}
+% 201223 R2020bU3 run with 201223 data
+%{
+%load('/work/durack1/Shared/200428_data_OceanObsAnalysis/201223_152459_local_robust_195001to202012_FLRdouble_sptg_R2020bU3_detect_79pres1000.mat')
+%Ref: https://github.com/durack1/oceanObs/blob/5bab303fe00cd0b004d8e0bf0d71a3ca6faced48/fit_pres_1950_FLRdouble_sptg.m
+%load('/work/durack1/Shared/200428_data_OceanObsAnalysis/201223_pressurf_global_nodupes_exclude.mat')
+%[~,indMin] = min(time_decimal); [~,indMax] = max(time_decimal);
+%disp(time_elements(:,indMin)'), disp(time_elements(:,indMax)')
+timeYrs = 70; % 1950-2020
+clim = strsplit('1874-10-13 0:0:0; 2020-12-11 00:33:00',';');
+climBndsStart   = strtok(clim{1});
+climBndsEnd     = strtok(clim{2}); clear clim
+timebin         = 1950:10:2020;
+timeStart       = [num2str(timebin(1)),'0101']; clear timebin
+timeStop        = [climBndsEnd(1:4),'1211'];
+timeWindow      = [timeStart,'-',timeStop,'-201223-R2020bU3'];
+a_infile        = '/work/durack1/Shared/200428_data_OceanObsAnalysis/201223_pressurf_global_nodupes_exclude.mat';
+a_infileMd5     = '2e46e589757491ab31c1196d263e0fe4';
+a_infileModify  = '2020-12-23 13:35:25.056337661 -0800';
+a_gitHash       = 'github.com/durack1/oceanObs/blob/5bab303fe00cd0b004d8e0bf0d71a3ca6faced48/fit_pres_1950_FLRdouble_sptg.m';
+%}
 
 %% If running through entire script cleanup export files
 infile = char(fullfile(outPath,[name,ext]));

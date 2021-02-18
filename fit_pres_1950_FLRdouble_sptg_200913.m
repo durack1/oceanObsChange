@@ -129,6 +129,8 @@
 %}
 % PJD 13 Sep 2020   - Copied from /work/durack1/csiro/Backup/110808/Z_dur041_linux/Shared/code/_archive/fit_pres_1950_FLRdouble_sptg.m (090605)
 %                     and updated input
+% PJD 18 Feb 2021   - Updated to take args for reuse without edits
+%                   - TODO: need to update info below so new validation scripts work
 
 warning off all % Suppress warning messages
 tic % Start timing script

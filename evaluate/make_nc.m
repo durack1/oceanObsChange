@@ -67,6 +67,7 @@ function make_nc(infile)
 % PJD 22 Jan 2021   - Update to use a_infile* and time* variables in metadata creation https://github.com/durack1/oceanObs/issues/11
 % PJD 22 Jan 2021   - Updated netcdf version global attribute 1.0.0 -> 1.1.0
 % PJD  9 Feb 2021   - Updated to generate nc from old file versions (no infile/time/git attributes)
+% PJD 18 Feb 2021   - Add salinity contrast diagnostics
 
 % make_nc.m
 
@@ -376,6 +377,11 @@ for x = 1:length(lon)
         end
     end
 end
+
+%% Create near-surface salinity contrast diagnostic
+[areaRatio,areaFraction,areaKm2] = area_weight(lon,lat);
+nearSurfMeanSalinity = nanmean(nanmean(squeeze(s_mean(:,:,1))));
+nearSurfMeanSalinityWt = nanmean(nanmean(squeeze(s_mean(:,:,1)).*areaFraction));
 
 %% Now create netcdf outFile
 ncid = netcdf.create(outFile,'NC_NOCLOBBER');

@@ -68,7 +68,7 @@ function make_nc(infile,writeFile)
 % PJD 22 Jan 2021   - Updated netcdf version global attribute 1.0.0 -> 1.1.0
 % PJD  9 Feb 2021   - Updated to generate nc from old file versions (no infile/time/git attributes)
 % PJD 18 Feb 2021   - Add salinity contrast diagnostics, and writeFile runtime argument
-%                   - TODO: Add 35.0 test case for area weights
+%                   - TODO: Add 35.0 test case for area weights; PA calculation, plus min/max changes written to globalAtt
 
 % make_nc.m
 

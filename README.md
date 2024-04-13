@@ -1,2 +1,2 @@
-# oceanObs
-Code associated with observational ocean analysis
+# oceanObsChange
+Code associated with observational ocean change analysis
